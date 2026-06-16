@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Reports</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/admin_reports.css" />
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="sidebar-top">
+        <h1>🪴 Green Admin</h1>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="/admin">Dashboard</a>
+        <a href="/admin/customers">Customers</a>
+        <a href="/admin/orders">Orders</a>
+        <a href="/admin/drivers">Drivers</a>
+        <a href="/admin/reports" class="active">Reports</a>
+        <a href="/admin/profile">Profile</a>
+      </nav>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1>Reports & Concerns</h1>
+          <p>Review customer return/refund requests, disputes, and concerns across the platform.</p>
+        </div>
+      </div>
+
+      <section class="admin-stats">
+        <div class="stat-card">
+          <h3>Total Reports</h3>
+          <p>{{ counts.total_reports }}</p>
+        </div>
+        <div class="stat-card warning">
+          <h3>Pending Review</h3>
+          <p>{{ counts.pending_reports }}</p>
+        </div>
+        <div class="stat-card">
+          <h3>Read</h3>
+          <p>{{ counts.resolved_reports }}</p>
+        </div>
+        <div class="stat-card danger">
+          <h3>Rejected</h3>
+          <p>{{ counts.escalated_reports }}</p>
+        </div>
+      </section>
+
+      <section class="reports-panel">
+        <div class="panel-top">
+          <input type="text" id="reportSearch" placeholder="Search report ID, customer, or issue..." />
+          <select id="statusFilter">
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="read">Read</option>
+            <option value="approved">Approved</option>
+            <option value="disapproved">Rejected</option>
+          </select>
+        </div>
+
+        <div class="reports-table">
+          <div class="table-row heading">
+            <span>Report ID</span>
+            <span>Customer</span>
+            <span>Issue Type</span>
+            <span>Reference</span>
+            <span>Date</span>
+            <span>Status</span>
+            <span>Actions</span>
+          </div>
+
+          {% for report in reports %}
+          <div class="table-row report-row" data-report="{{ report.report_id }}" data-customer="{{ (report.reporter_name or '')|lower }}" data-issue="{{ (report.reason or report.issue_type or '')|lower }}" data-status="{{ report.status or 'pending' }}">
+            <span>#{{ report.report_id }}</span>
+            <span>{{ report.reporter_name or 'Reporter' }}</span>
+            <span>{{ report.issue_type or 'Platform Concern' }}</span>
+            <span>#{{ report.reference or 'N/A' }}</span>
+            <span>{{ report.created_at or 'N/A' }}</span>
+            <span class="status {{ report.status or 'pending' }}">{{ (report.status or 'pending')|capitalize }}</span>
+            <span class="actions">
+              <button
+                class="view-btn report-view-btn"
+                type="button"
+                data-report-id="{{ report.report_id }}"
+                data-reporter="{{ report.reporter_name or 'Reporter' }}"
+                data-reporter-type="{{ report.reporter_type or 'Customer' }}"
+                data-issue-type="{{ report.issue_type or 'Platform Concern' }}"
+                data-reference="{{ report.reference or 'N/A' }}"
+                data-reason="{{ report.reason or 'No description provided.' }}"
+                data-proof="{{ report.proof_photo or '' }}"
+                data-status="{{ report.status or 'pending' }}"
+                data-owner-response="{{ report.owner_response or 'No owner response recorded.' }}"
+                data-admin-response="{{ report.admin_response or 'No admin response recorded.' }}"
+                data-created="{{ report.created_at or 'N/A' }}"
+                data-reviewed="{{ report.reviewed_at or 'N/A' }}"
+                data-source="{{ report.source or 'reports' }}"
+                data-db-id="{{ report.id }}"
+              >View</button>
+            </span>
+          </div>
+          {% else %}
+          <div class="table-row report-row" data-report="" data-customer="" data-issue="" data-status="pending">
+            <span>No reports yet</span>
+            <span>-</span>
+            <span>-</span>
+            <span>-</span>
+            <span>-</span>
+            <span class="status pending">Pending</span>
+            <span class="actions">-</span>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <div class="admin-modal hidden" id="reportDetailsModal">
+        <div class="admin-modal-content">
+          <button class="close-modal" type="button" data-close-modal>&times;</button>
+          <h2>Report Details</h2>
+          <div class="detail-grid">
+            <p><strong>Report ID:</strong> #<span id="modalReportId"></span></p>
+            <p><strong>Reporter:</strong> <span id="modalReporter"></span></p>
+            <p><strong>Reporter Type:</strong> <span id="modalReporterType"></span></p>
+            <p><strong>Issue Type:</strong> <span id="modalIssueType"></span></p>
+            <p><strong>Order Reference:</strong> #<span id="modalReference"></span></p>
+            <p><strong>Status:</strong> <span id="modalReportStatus"></span></p>
+            <p><strong>Created Date:</strong> <span id="modalReportCreated"></span></p>
+            <p><strong>Reviewed Date:</strong> <span id="modalReportReviewed"></span></p>
+          </div>
+          <h3>Description</h3>
+          <p id="modalReportReason"></p>
+          <h3>Owner Response</h3>
+          <p id="modalOwnerResponse"></p>
+          <h3>Admin Response</h3>
+          <p id="modalAdminResponse"></p>
+          <form class="report-response-form" id="reportResponseForm" method="POST">
+            <label for="adminResponseInput">Reply / Response</label>
+            <textarea id="adminResponseInput" name="admin_response" rows="4" placeholder="Write your response to this report."></textarea>
+            <div class="report-response-actions">
+              <button type="submit" class="send-response-btn">Send Response</button>
+              <button type="submit" class="mark-read-btn" name="mark_read" value="1">Mark as Read</button>
+            </div>
+          </form>
+          <div id="modalProofWrap" class="proof-preview hidden">
+            <h3>Proof Photo</h3>
+            <img id="modalProofPhoto" src="" alt="Proof photo">
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/admin_reports.js"></script>
+</body>
+</html>

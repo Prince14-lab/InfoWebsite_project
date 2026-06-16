@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Driver Location</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="/static/track_order.css">
+</head>
+<body>
+  <nav class="customer-navbar">
+    <a href="/Owner">Dashboard</a>
+    <a href="/Orders">Orders</a>
+    <a href="/Inventory">Inventory</a>
+    <a href="/OwnerProfile">Profile</a>
+  </nav>
+
+  <section class="tracking-section">
+    <div class="tracking-card">
+      <div class="tracking-header">
+        <div>
+          <h1>Driver Location</h1>
+          <p class="order-code">Order #{{ order.order_code or order.id }}</p>
+        </div>
+        <a href="/Orders" class="back-btn">Back to Orders</a>
+      </div>
+
+      <div class="live-tracking-card">
+        <h2>Assigned Driver</h2>
+        <p><strong>Driver:</strong> {{ order.driver_name or 'No active driver assigned' }}</p>
+        {% if order.latitude and order.longitude and order.is_active %}
+          <p class="live-status">Live GPS is active. Last update: {{ order.updated_at }}</p>
+          <div id="map" class="map"></div>
+        {% else %}
+          <p class="live-status">Live location is not active yet. The driver must open the Share Live Location page.</p>
+        {% endif %}
+      </div>
+
+      <h2>Manual Tracking Timeline</h2>
+      {% if tracking_updates %}
+      <div class="timeline">
+        {% for update in tracking_updates %}
+        <div class="timeline-item">
+          <span class="timeline-dot"></span>
+          <div class="timeline-content">
+            <h3>{{ update.tracking_status }}</h3>
+            <p>{{ update.location }}</p>
+            {% if update.note %}<p>{{ update.note }}</p>{% endif %}
+            <small>{{ update.created_at }}</small>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-tracking">No manual tracking updates yet.</div>
+      {% endif %}
+    </div>
+  </section>
+
+  {% if order.latitude and order.longitude and order.is_active %}
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const latitude = Number("{{ order.latitude }}");
+    const longitude = Number("{{ order.longitude }}");
+    const map = L.map("map").setView([latitude, longitude], 15);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap"
+    }).addTo(map);
+    L.marker([latitude, longitude]).addTo(map).bindPopup("{{ order.driver_name or 'Driver' }}").openPopup();
+  </script>
+  {% endif %}
+</body>
+</html>

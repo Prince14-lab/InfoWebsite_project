@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+  <title>Home Page</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+</head>
+<body>
+
+  <div class="background">
+    <div class="overlay"></div>
+
+    <header class="header">
+      <nav class="navbar">
+        <h1 class="logo">🪴 Green</h1>
+        <ul>
+          <li><a href="#index">Home</a></li>
+          <li><a href="#plants">Plants</a></li>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#about">About Us</a></li>
+          <li><a href="#contact">Contact Us</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <section id="index" class="hero-section">
+      <div class="content">
+        <div class="name">
+          <h1>Welcome To Green</h1>
+          <p>
+            Bring life and freshness into your space. Buy a plant today and
+            enjoy the beauty, calm, and joy it brings every day.
+          </p>
+          <a href="/login" class="btn">Shop Now</a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+
+<section id="plants" class="section-plants">
+  <h1 class ="plant-heading">We Offer different varieties of plants</h1>
+  <div class="gallery-container">
+    <div class="plant-card">
+      <img src="/static/calamasiplant.jpg" alt="Calamansi">
+      <div class="plant-info">
+        <h3>Calamansi</h3>
+        <p>₱70</p>
+      </div>
+    </div>
+
+    <div class="plant-card">
+      <img src="/static/snakeplant.jpg" alt="Snake Plant">
+      <div class="plant-info">
+        <h3>Snake Plant</h3>
+        <p>₱220</p>
+      </div>
+    </div>
+
+    <div class="plant-card">
+      <img src="/static/pothos.jpg" alt="Pothos">
+      <div class="plant-info">
+        <h3>Pothos</h3>
+        <p>₱180</p>
+      </div>
+    </div>
+
+    <div class="plant-card">
+      <img src="/static/rosalplant.jpg" alt="Rosal">
+      <div class="plant-info">
+        <h3>Rosal</h3>
+        <p>₱200</p>
+      </div>
+    </div>
+
+    <div class="plant-card">
+      <img src="/static/redguava.jpg" alt="Red Guava">
+      <div class="plant-info">
+        <h3>Red Guava</h3>
+        <p>₱150</p>
+      </div>
+    </div>
+
+    <div class="plant-card">
+      <img src="/static/sampaloc.jpg" alt="Sampaloc">
+      <div class="plant-info">
+        <h3>Sampaloc</h3>
+        <p>₱50</p>
+      </div>
+    </div>
+
+    <div class="plant-card">
+      <img src="/static/miraclefruit.jpg" alt="Miracle Fruit">
+      <div class="plant-info">
+        <h3>Miracle Fruit</h3>
+        <p>₱130</p>
+      </div>
+    </div>
+
+    <div class="plant-card">
+      <img src="/static/dwarf coconut.jpg" alt="Dwarf Coconut">
+      <div class="plant-info">
+        <h3>Dwarf Coconut</h3>
+        <p>₱300</p>
+      </div>
+    </div>
+
+    <div class="plant-card">
+      <img src="/static/bugainvillia.jpg" alt="Bougainvillea">
+      <div class="plant-info">
+        <h3>Bougainvillea</h3>
+        <p>₱240</p>
+      </div>
+    </div>
+
+    <div class="plant-card">
+      <img src="/static/talisay.jpg" alt="African Talisay">
+      <div class="plant-info">
+        <h3>African Talisay</h3>
+        <p>₱500</p>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+  <section id="services" class="section-services">
+    <div class="services-wrapper">
+      <h2 class="service-heading">Our Services</h2>
+
+      <div class="service-header">
+        <div class="service-container">
+          <img src="/static/Plant Delivery1.jpg" alt="Plant Delivery">
+          <h3>Plant Delivery</h3>
+          <p>
+            Fast and safe delivery of your favorite plants right to your
+            doorstep.
+          </p>
+        </div>
+
+        <div class="service-container">
+          <img src="/static/consulation.jpg" alt="Plant Consultation">
+          <h3>Plant Consultation</h3>
+          <p>
+            Get helpful advice on choosing the right plants and how to care for
+            them properly.
+          </p>
+        </div>
+
+        <div class="service-container">
+          <img src="/static/Landscaping-Services.jpg" alt="Landscaping Services">
+          <h3>Landscaping</h3>
+          <p>
+            We help design and improve your garden or outdoor space with
+            beautiful greenery.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="about" class="section-about">
+  <div class="about-container">
+
+    <div class="about-image">
+      <img src="/static/about-nursery.jpg" alt="Plant Nursery">
+    </div>
+
+    <div class="about-content">
+      <h2>About Us</h2>
+      <p>
+  Our nursery is dedicated to providing healthy and beautiful plants <br>for every
+  home and garden. We carefully grow and offer a variety <br>of indoor, outdoor,
+  flowering, and fruit-bearing plants. With our <br>passion for nature and plant
+  care, we aim to help bring freshness,<br> beauty, and life into your space.
+</p>
+    </div>
+
+  </div>
+</section>
+
+  <section id="contact" class="section-contact">
+
+  <div class="contact-container">
+
+    <div class="contact-info">
+      <h2>Contact Us</h2>
+      <p>
+        Have questions about our plants or services?  
+        Feel free to reach out to us anytime.
+      </p>
+
+      <div class="contact-details">
+        <p>Location: {{ owner_info.address or 'Philippines' }}</p>
+        <p>Phone: {{ owner_info.shop_contact or owner_info.phone or '+63 912 345 6789' }}</p>
+        <p>Email: {{ owner_info.shop_email or owner_info.email or 'greenplants@email.com' }}</p>
+        <p>Facebook: <a href="https://www.facebook.com/profile.php?id=61577940363328" target="_blank">Prince Plant Nursery</a></p>
+      </div>
+    </div>
+
+    <form class="contact-form" method="POST" action="/contact-owner">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="contact-alerts">
+            {% for category, message in messages %}
+              <div class="contact-alert {{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <input type="text" name="name" placeholder="Your Name" required>
+
+      <input type="email" name="email" placeholder="Your Email" required>
+
+      <textarea name="message" placeholder="Your Message" rows="5" required></textarea>
+
+      <button type="submit">Send Message</button>
+
+    </form>
+
+  </div>
+
+</section>
+
+  <script src="/static/changer.js"></script>
+</body>
+</html>

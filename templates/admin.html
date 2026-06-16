@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/admin.css" />
+</head>
+<body>
+
+  <div class="admin-layout">
+
+    <aside class="admin-sidebar">
+      <div class="sidebar-top">
+        <h1>🪴 Green Admin</h1>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="/admin" class="active">Dashboard</a>
+        <a href="/admin/customers">Customers</a>
+        <a href="/admin/orders">Orders</a>
+        <a href="/admin/drivers">Drivers</a>
+        <a href="/admin/reports">Reports</a>
+        <a href="/admin/profile">Profile</a>
+      </nav>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1>Admin Dashboard</h1>
+          <p>Manage the platform, monitor users, and oversee activity.</p>
+        </div>
+        <button class="admin-action-btn" id="announcementToggle" type="button">Post Announcement</button>
+      </div>
+
+      <section class="admin-stats">
+        <div class="stat-card">
+          <h3>Total Customers</h3>
+          <p>{{ counts.total_customers }}</p>
+        </div>
+
+        <div class="stat-card">
+          <h3>Active Orders</h3>
+          <p>{{ counts.active_orders }}</p>
+        </div>
+
+        <div class="stat-card warning">
+          <h3>Pending Reports</h3>
+          <p>{{ counts.pending_reports }}</p>
+        </div>
+
+        <div class="stat-card warning">
+          <h3>Blocked Customers</h3>
+          <p>{{ counts.blocked_customers }}</p>
+        </div>
+      </section>
+
+      <section class="admin-grid">
+
+        <div class="admin-panel large">
+          <h2>Recent Customer Registrations</h2>
+
+          <div class="table-list">
+            <div class="table-row heading">
+              <span>Name</span>
+              <span>Email</span>
+              <span>Date Joined</span>
+            </div>
+
+            {% for customer in recent_customers %}
+            <div class="table-row">
+              <span>{{ customer.fullname }}</span>
+              <span>{{ customer.email or 'N/A' }}</span>
+              <span>{{ customer.created_at }}</span>
+            </div>
+            {% else %}
+            <div class="table-row">
+              <span>No customers yet</span>
+              <span>-</span>
+              <span>-</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="admin-panel">
+          <h2>System Notices</h2>
+          <div class="notice-list">
+            <div class="notice-card">
+              <h4>Low Stock Warning</h4>
+              <p>{{ counts.low_stock }} plants are running low on stock.</p>
+            </div>
+            <div class="notice-card">
+              <h4>Order Monitoring</h4>
+              <p>{{ counts.active_orders }} active orders need monitoring.</p>
+            </div>
+            <div class="notice-card">
+              <h4>Customer Concern</h4>
+              <p>{{ counts.pending_reports }} return/refund reports are pending.</p>
+            </div>
+            <div class="notice-card">
+              <h4>Blocked Accounts</h4>
+              <p>{{ counts.blocked_customers }} customer accounts are currently blocked.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-panel">
+          <h2>Recent Order Activity</h2>
+          <div class="activity-list">
+            {% for order in recent_orders %}
+            <div class="activity-item">
+              <strong>#{{ order.order_code }}</strong>
+              <p>{{ order.items_text }} - {{ order.order_status }}</p>
+            </div>
+            {% else %}
+            <div class="activity-item">
+              <strong>No orders yet</strong>
+              <p>Recent customer orders will appear here.</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="admin-panel">
+          <h2>Admin Activity Log</h2>
+          <div class="activity-list">
+            {% for log in admin_logs %}
+            <div class="activity-item">
+              <strong>{{ log.action|title }}</strong>
+              <p>{{ log.details or 'Admin action recorded.' }} - {{ log.created_at }}</p>
+            </div>
+            {% else %}
+            <div class="activity-item">
+              <strong>No admin activity yet</strong>
+              <p>Profile updates, blocked customers, and reviewed reports will appear here.</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <div class="announcement-widget">
+    <div id="announcementPanel" class="announcement-panel hidden">
+      <div class="announcement-header">
+        <h3>Post Announcement</h3>
+        <div class="announcement-actions">
+          <button id="closeAnnouncement" title="Close" type="button">x</button>
+        </div>
+      </div>
+
+      <div class="announcement-body">
+        <div class="announcement-messages">
+          {% for announcement in announcements %}
+          <div class="announcement-message received">
+            <p>{{ announcement.body }}</p>
+            {% if announcement.photo_url %}
+            <a href="{{ announcement.photo_url }}" target="_blank">
+              <img src="{{ announcement.photo_url }}" alt="Announcement photo">
+            </a>
+            {% endif %}
+            <small>{{ announcement.created_at }}</small>
+          </div>
+          {% else %}
+          <div class="announcement-message received">
+            Announcements posted here will appear in the customer and owner message panel.
+          </div>
+          {% endfor %}
+        </div>
+
+        <form class="announcement-input-area" action="/admin/announcements" method="POST" enctype="multipart/form-data">
+          <textarea name="announcement" rows="2" placeholder="Write an announcement..." required></textarea>
+          <label class="announcement-photo-btn">
+            Photo
+            <input type="file" name="announcement_photo" accept="image/*">
+          </label>
+          <button type="submit">Post</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="message-widget" data-message-role="admin">
+    <button id="messageToggle" class="message-toggle-btn" type="button">Message</button>
+
+    <div id="messengerPanel" class="messenger-panel hidden expanded">
+      <div class="messenger-header">
+        <h3>Owner Message</h3>
+        <div class="messenger-actions">
+          <button id="collapseMessenger" title="Collapse" type="button">-</button>
+          <button id="closeMessenger" title="Close" type="button">x</button>
+        </div>
+      </div>
+
+      <div class="messenger-body">
+        <div class="contact-list" id="messageContacts">
+          <div class="contact active" data-chat-target="owner">
+            <img src="/static/default-profile.jpg" alt="Reports">
+            <span>Owner</span>
+          </div>
+          <div class="contact" data-chat-target="adminpal">
+            <div class="adminpal-contact-avatar">AP</div>
+            <span>AdminPal</span>
+          </div>
+        </div>
+
+        <div class="chat-area">
+          <div class="chat-header">
+            <h4 id="chatTitle">Owner</h4>
+          </div>
+          <div class="chat-messages" id="chatMessages">
+            <div class="message received">Owner messages will appear here.</div>
+          </div>
+          <form class="chat-input-area" id="messageForm" enctype="multipart/form-data">
+            <input type="hidden" id="messageThreadId" name="thread_id">
+            <input type="text" id="messageInput" name="message" placeholder="Type a message..." autocomplete="off">
+            <button type="submit">Send</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/message_widget.js"></script>
+  <script src="/static/admin.js"></script>
+</body>
+</html>

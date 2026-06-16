@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Owner Inventory</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/inventory.css" />
+</head>
+<body>
+
+  <nav class="owner-navbar">
+    <h1 class="logo">🪴 Green Owner</h1>
+    <ul>
+      <li><a href="/Owner">Dashboard</a></li>
+      <li><a href="/Orders">Orders</a></li>
+      <li><a href="/Inventory">Inventory</a></li>
+      <li><a href="/OwnerProfile">Profile</a></li>
+    </ul>
+  </nav>
+
+  <section class="owner-inventory">
+    <div class="inventory-wrapper">
+
+      <div class="inventory-header">
+        <div>
+          <h1>Plant Inventory</h1>
+          <p>Manage the plants you are selling in your nursery shop.</p>
+        </div>
+
+        <button class="add-plant-btn" id="openPlantModal">+ Add New Plant</button>
+      </div>
+
+      <div class="inventory-controls">
+        <input type="text" id="plantSearch" placeholder="Search plant name...">
+        
+        <select id="categoryFilter">
+          <option value="all">All Categories</option>
+          <option value="indoor">Indoor</option>
+          <option value="outdoor">Outdoor</option>
+          <option value="fruit">Fruit Bearing</option>
+          <option value="flowering">Flowering</option>
+        </select>
+      </div>
+
+      <div class="inventory-grid" id="inventoryGrid">
+  {% for plant in plants %}
+    <div class="inventory-card"
+         data-id="{{ plant.id }}"
+         data-name="{{ plant.name|lower }}"
+         data-category="{{ plant.category }}"
+         data-price="{{ plant.price }}"
+         data-stock="{{ plant.stock }}"
+         data-description="{{ plant.description or '' }}"
+         data-image="{{ plant.image_url }}"
+         data-sample-photo="{{ plant.sample_photo or '' }}"
+         data-sample-photos="{{ plant.sample_photos or '' }}">
+      
+      <img src="{{ plant.image_url }}" alt="{{ plant.name }}">
+      
+      <div class="inventory-info">
+        <div class="card-top">
+          <h3>{{ plant.name }}</h3>
+          <span class="category {{ plant.category }}">
+            {% if plant.category == 'indoor' %}
+              Indoor
+            {% elif plant.category == 'outdoor' %}
+              Outdoor
+            {% elif plant.category == 'fruit' %}
+              Fruit Bearing
+            {% elif plant.category == 'flowering' %}
+              Flowering
+            {% else %}
+              {{ plant.category }}
+            {% endif %}
+          </span>
+        </div>
+
+        <p class="price">₱{{ plant.price }}</p>
+        <p class="stock {% if plant.stock <= 5 %}low-stock{% endif %}">
+          Stock: {{ plant.stock }}
+        </p>
+
+        <div class="card-actions">
+          <button class="edit-btn" type="button">Edit</button>
+
+          <form action="{{ url_for('owner.delete_plant', plant_id=plant.id) }}" method="POST">
+            <button class="delete-btn" type="submit">Delete</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- MODAL -->
+  <div class="modal-overlay hidden" id="plantModal">
+    <div class="plant-modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add New Plant</h2>
+        <button class="close-modal" id="closePlantModal">✕</button>
+      </div>
+
+      <form class="plant-form" id="plantForm" method="POST" action="{{ url_for('owner.add_plant') }}" enctype="multipart/form-data">
+        <div class="form-group">
+          <label>Plant Name</label>
+          <input type="hidden" id="plantId" name="plantId">
+          <input type="text" id="plantName" name="plantName" placeholder="Enter plant name" required>
+        </div>
+
+        <div class="form-group">
+          <label>Category</label>
+          <select id="plantCategory" name="plantCategory">
+            <option value="indoor">Indoor</option>
+            <option value="outdoor">Outdoor</option>
+            <option value="fruit">Fruit Bearing</option>
+            <option value="flowering">Flowering</option>
+          </select>
+        </div>
+
+        <div class="form-group wide">
+          <label>Plant Description</label>
+          <textarea id="plantDescription" name="plantDescription" rows="4" placeholder="Describe the plant, care notes, appearance, or what makes it special."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Price</label>
+          <input type="number" step="0.01" min="0" id="plantPrice" name="plantPrice" placeholder="Enter price" required>
+        </div>
+
+        <div class="form-group">
+          <label>Stock</label>
+          <input type="number" min="0" id="plantStock" name="plantStock" placeholder="Enter stock quantity" required>
+        </div>
+
+        <div class="form-group">
+          <label>Main Plant Image URL / Path</label>
+          <input type="text" id="plantImage" name="plantImage" placeholder="/static/sample.jpg">
+        </div>
+
+        <div class="form-group">
+          <label>Main Plant Photo</label>
+          <input type="file" id="plantMainPhoto" name="plantMainPhoto" accept="image/*">
+        </div>
+
+        <div class="form-group wide">
+          <label>Sample Photo URL / Path(s)</label>
+          <textarea id="plantSampleImages" name="plantSampleImages" rows="3" placeholder="/static/sample-1.jpg&#10;/static/sample-2.jpg"></textarea>
+        </div>
+
+        <div class="form-group wide">
+          <label>Plant Sample Photos</label>
+          <input type="file" id="plantSamplePhotos" name="plantSamplePhotos" accept="image/*" multiple>
+          <input type="hidden" id="existingSamplePhoto" name="existingSamplePhoto">
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="cancel-form-btn" id="cancelPlantForm">Cancel</button>
+          <button type="submit" class="save-form-btn">Save Plant</button>
+        </div>
+      </form>
+    </div>
+  </div>
+ <div class="message-widget" data-message-role="owner">
+
+  <button id="messageToggle" class="message-toggle-btn">
+    Message
+  </button>
+
+  <div id="messengerPanel" class="messenger-panel hidden expanded">
+
+    <div class="messenger-header">
+      <h3>Owner Messages</h3>
+
+      <div class="messenger-actions">
+        <button id="collapseMessenger" title="Collapse">—</button>
+        <button id="closeMessenger" title="Close">✕</button>
+      </div>
+    </div>
+
+    <div class="messenger-body">
+
+      <!-- CONTACT LIST -->
+      <div class="contact-list" id="messageContacts">
+        <div class="contact active" data-name="Customers">
+          <img src="/static/default-profile.jpg" alt="Customers">
+          <span>Customers</span>
+        </div>
+      </div>
+
+      <!-- CHAT AREA -->
+      <div class="chat-area">
+        <div class="chat-header">
+          <h4 id="chatTitle">Customers</h4>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+          <div class="message received">Customer inquiries will appear here.</div>
+        </div>
+
+        <form class="chat-input-area" id="messageForm">
+          <input type="hidden" id="messageThreadId" name="thread_id">
+          <input type="text" id="messageInput" name="message" placeholder="Type a message..." autocomplete="off">
+          <button type="submit">Send</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+  <script src="/static/inventory.js"></script>
+  <script src="/static/message_widget.js"></script>
+</body>
+</html>

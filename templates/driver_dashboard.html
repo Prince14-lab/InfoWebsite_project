@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Driver Dashboard</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/driver.css">
+</head>
+<body>
+  <header class="driver-header">
+    <div>
+      <h1>Driver Dashboard</h1>
+      <p>Welcome, {{ driver_user.fullname or 'Delivery Driver' }}</p>
+    </div>
+    <a class="logout-link" href="{{ url_for('auth.logout') }}">Logout</a>
+  </header>
+
+  <main class="driver-main">
+    <section class="summary-grid">
+      <div class="summary-card">
+        <span>Assigned Deliveries</span>
+        <strong>{{ total_assigned }}</strong>
+      </div>
+      <div class="summary-card">
+        <span>Active Deliveries</span>
+        <strong>{{ active_deliveries }}</strong>
+      </div>
+      <div class="summary-card">
+        <span>Completed Deliveries</span>
+        <strong>{{ completed_deliveries }}</strong>
+      </div>
+      <div class="summary-card">
+        <span>Return Pickups</span>
+        <strong>{{ active_pickups }}</strong>
+      </div>
+    </section>
+
+    <section class="order-list">
+      <h2>Delivery Orders</h2>
+      {% if deliveries %}
+        {% for order in deliveries %}
+        <article class="driver-order-card">
+          <div class="order-title-row">
+            <h3>Order #{{ order.order_code or order.id }}</h3>
+            <span>{{ order.order_status or 'Pending' }}</span>
+          </div>
+          <p><strong>Customer:</strong> {{ order.customer_name or 'Customer' }}</p>
+          <p><strong>Contact:</strong> {{ order.contact_number or 'No contact number' }}</p>
+          <p><strong>Address:</strong> {{ order.delivery_address or 'No delivery address' }}</p>
+          <p><strong>Task Type:</strong> Delivery</p>
+          <p><strong>Payment:</strong> {{ order.payment_method or 'Pending' }} | {{ order.payment_status or 'Pending' }}</p>
+          <p><strong>Assigned:</strong> {{ order.assigned_at }}</p>
+          <div class="driver-actions">
+            <a class="primary-btn" href="/driver/order/{{ order.id }}/share-location">Share Live Location</a>
+            <button class="stop-btn" type="button" data-order-id="{{ order.id }}">Stop Live Location</button>
+            <a href="{{ order.navigation_url }}" target="_blank" class="navigate-btn">Open Delivery Location</a>
+          </div>
+        </article>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">No deliveries assigned yet.</div>
+      {% endif %}
+    </section>
+
+    <section class="order-list">
+      <h2>Return Pickup Requests</h2>
+      {% if pickups %}
+        {% for order in pickups %}
+        <article class="driver-order-card pickup-card">
+          <div class="order-title-row">
+            <h3>Pickup for Order #{{ order.order_code or order.id }}</h3>
+            <span>{{ order.pickup_status or 'Driver Assigned' }}</span>
+          </div>
+          <p><strong>Customer:</strong> {{ order.customer_name or 'Customer' }}</p>
+          <p><strong>Contact:</strong> {{ order.contact_number or 'No contact number' }}</p>
+          <p><strong>Pickup Address:</strong> {{ order.delivery_address or 'No address' }}</p>
+          <p><strong>Task Type:</strong> Return Pickup</p>
+          <p><strong>Reason:</strong> {{ order.return_reason or 'No reason provided' }}</p>
+          {% if order.return_proof_photo %}
+          <p><a href="{{ order.return_proof_photo }}" target="_blank">View proof photo</a></p>
+          {% endif %}
+          <p><strong>Assigned:</strong> {{ order.assigned_at }}</p>
+          <div class="driver-actions">
+            <a class="primary-btn" href="/driver/order/{{ order.id }}/share-location">Share Live Location</a>
+            <a href="{{ order.navigation_url }}" target="_blank" class="navigate-btn">Open Pickup Location</a>
+            <button class="stop-btn" type="button" data-order-id="{{ order.id }}">Stop Live Location</button>
+            {% if order.return_request_id %}
+            <form action="/driver/return-pickup/{{ order.return_request_id }}/mark-picked-up" method="POST">
+              <button class="secondary-btn" type="submit">Mark Picked Up</button>
+            </form>
+            {% endif %}
+          </div>
+        </article>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">No return pickups assigned yet.</div>
+      {% endif %}
+    </section>
+  </main>
+
+  <script>
+    document.querySelectorAll(".stop-btn").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const orderId = button.dataset.orderId;
+        button.disabled = true;
+        try {
+          const response = await fetch(`/driver/order/${orderId}/stop-live-location`, { method: "POST" });
+          const data = await response.json();
+          alert(data.success ? "Live location stopped." : (data.message || "Unable to stop live location."));
+        } catch (error) {
+          alert("Unable to stop live location right now.");
+        } finally {
+          button.disabled = false;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

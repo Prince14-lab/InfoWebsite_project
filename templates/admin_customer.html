@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Customers</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/admin_customer.css" />
+</head>
+<body>
+
+  <div class="admin-layout">
+
+    <aside class="admin-sidebar">
+      <div class="sidebar-top">
+        <h1>🪴 Green Admin</h1>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="/admin">Dashboard</a>
+        <a href="/admin/customers" class="active">Customers</a>
+        <a href="/admin/orders">Orders</a>
+        <a href="/admin/drivers">Drivers</a>
+        <a href="/admin/reports">Reports</a>
+        <a href="/admin/profile">Profile</a>
+      </nav>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1>Customer Management</h1>
+          <p>View, monitor, and manage registered customer accounts.</p>
+        </div>
+      </div>
+
+      <section class="admin-stats">
+        <div class="stat-card">
+          <h3>Total Customers</h3>
+          <p>{{ counts.total_customers }}</p>
+        </div>
+
+        <div class="stat-card">
+          <h3>Active Accounts</h3>
+          <p>{{ counts.active_customers }}</p>
+        </div>
+
+        <div class="stat-card warning">
+          <h3>Blocked Accounts</h3>
+          <p>{{ counts.blocked_customers }}</p>
+        </div>
+
+        <div class="stat-card">
+          <h3>New This Month</h3>
+          <p>{{ counts.new_customers_month }}</p>
+        </div>
+      </section>
+
+      <section class="customers-panel">
+        <div class="panel-top">
+          <input type="text" id="customerSearch" placeholder="Search name or email..." />
+
+          <select id="statusFilter">
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="blocked">Blocked</option>
+          </select>
+        </div>
+
+        <div class="customers-table">
+          <div class="table-row heading">
+            <span>Name</span>
+            <span>Email</span>
+            <span>Phone</span>
+            <span>Orders</span>
+            <span>Status</span>
+            <span>Actions</span>
+          </div>
+
+          {% for customer in customers %}
+          <div class="table-row customer-row" data-name="{{ (customer.fullname or '')|lower }}" data-email="{{ (customer.email or '')|lower }}" data-status="{{ customer.account_status or 'active' }}">
+            <span>{{ customer.fullname }}</span>
+            <span>{{ customer.email or 'N/A' }}</span>
+            <span>{{ customer.phone or 'N/A' }}</span>
+            <span>{{ customer.order_count }}</span>
+            <span class="status {{ customer.account_status or 'active' }}">{{ (customer.account_status or 'active')|capitalize }}</span>
+            <span class="actions">
+              <button
+                class="view-btn customer-view-btn"
+                type="button"
+                data-fullname="{{ customer.fullname or 'Customer' }}"
+                data-email="{{ customer.email or 'N/A' }}"
+                data-username="{{ customer.username or 'N/A' }}"
+                data-phone="{{ customer.phone or 'N/A' }}"
+                data-address="{{ customer.address or 'N/A' }}"
+                data-created="{{ customer.created_at or 'N/A' }}"
+                data-status="{{ customer.account_status or 'active' }}"
+                data-orders="{{ customer.order_count }}"
+                data-recent-orders="{{ customer.recent_orders_text or 'No recent orders.' }}"
+              >View</button>
+              <form action="/admin/customer/{{ customer.id }}/toggle-status" method="POST" class="status-toggle-form" data-action="{{ 'unblock' if customer.account_status == 'blocked' else 'block' }}">
+                <button class="{{ 'unblock-btn' if customer.account_status == 'blocked' else 'block-btn' }}" type="submit">
+                  {{ 'Unblock' if customer.account_status == 'blocked' else 'Block' }}
+                </button>
+              </form>
+            </span>
+          </div>
+          {% else %}
+          <div class="table-row customer-row" data-name="" data-email="" data-status="active">
+            <span>No customers yet</span>
+            <span>-</span>
+            <span>-</span>
+            <span>0</span>
+            <span class="status active">Active</span>
+            <span class="actions">-</span>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <div class="admin-modal hidden" id="customerDetailsModal">
+        <div class="admin-modal-content">
+          <button class="close-modal" type="button" data-close-modal>&times;</button>
+          <h2>Customer Details</h2>
+          <div class="detail-grid">
+            <p><strong>Full Name:</strong> <span id="modalCustomerName"></span></p>
+            <p><strong>Email:</strong> <span id="modalCustomerEmail"></span></p>
+            <p><strong>Username:</strong> <span id="modalCustomerUsername"></span></p>
+            <p><strong>Phone:</strong> <span id="modalCustomerPhone"></span></p>
+            <p><strong>Address:</strong> <span id="modalCustomerAddress"></span></p>
+            <p><strong>Date Registered:</strong> <span id="modalCustomerCreated"></span></p>
+            <p><strong>Status:</strong> <span id="modalCustomerStatus"></span></p>
+            <p><strong>Total Orders:</strong> <span id="modalCustomerOrders"></span></p>
+          </div>
+          <h3>Recent Orders</h3>
+          <pre id="modalCustomerRecentOrders"></pre>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/admin_customer.js"></script>
+</body>
+</html>

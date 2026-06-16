@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Owner Profile</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/owner_profile.css" />
+</head>
+<body>
+
+  <nav class="owner-navbar">
+    <h1 class="logo">🪴 Green Owner</h1>
+    <ul>
+      <li><a href="/Owner">Dashboard</a></li>
+      <li><a href="/Orders">Orders</a></li>
+      <li><a href="/Inventory">Inventory</a></li>
+      <li><a href="/OwnerProfile" class="active">Profile</a></li>
+    </ul>
+  </nav>
+
+  <section class="owner-profile-section">
+    <div class="owner-profile-wrapper">
+
+      <div class="owner-profile-layout">
+
+        <!-- LEFT PROFILE CARD -->
+        <div class="owner-profile-card">
+          <div class="owner-avatar">
+            <img src="{{ user.profile_photo or 'https://i.pravatar.cc/180?img=12' }}" alt="Owner Profile">
+            <form class="avatar-edit-form" action="/update-owner-profile-photo" method="POST" enctype="multipart/form-data">
+              <label class="avatar-edit-btn" title="Change profile photo">
+                <span>&#9998;</span>
+                <input type="file" name="profile_photo" accept="image/*" onchange="this.form.submit()">
+              </label>
+            </form>
+          </div>
+
+          <h2>{{ user.fullname }}</h2>
+          <p>Shop Owner</p>
+
+          <div class="shop-badge">{{ user.shop_name or 'Green Nursery' }}</div>
+
+          <div class="profile-side-actions">
+            <button id="showOwnerInfo">Owner Info</button>
+            <button id="showShopInfo">Shop Info</button>
+            <button id="showPasswordSection">Change Password</button>
+            <a href="{{ url_for('auth.logout') }}" class="logout-btn">Logout</a>
+          </div>
+        </div>
+
+        <!-- RIGHT CONTENT -->
+        <div class="owner-profile-content">
+
+          <!-- OWNER INFO -->
+          <div class="profile-box active-section" id="ownerInfoSection">
+            <h2>Owner Information</h2>
+
+            <form class="profile-form" id="ownerForm">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Full Name</label>
+                  <input type="text" name="fullname" value="{{ user.fullname }}">
+                </div>
+
+                <div class="form-group">
+                  <label>Email Address</label>
+                  <input type="email" name="email" value="{{ user.email }}">
+                </div>
+
+                <div class="form-group">
+                  <label>Phone Number</label>
+                  <input type="text" name="phone" value="{{ user.phone }}">
+                </div>
+
+                <div class="form-group">
+                  <label>Owner Role</label>
+                  <input type="text" value="Plant Nursery Owner" readonly>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Address</label>
+                <textarea name="address" rows="4">{{ user.address }}</textarea>
+              </div>
+
+              <button type="submit" class="save-btn">Save Changes</button>
+            </form>
+          </div>
+
+          <!-- SHOP INFO -->
+          <div class="profile-box hidden-section" id="shopInfoSection">
+            <h2>Shop Information</h2>
+
+            <form class="profile-form" id="shopInfoForm">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Shop Name</label>
+                  <input type="text" name="shop_name" value="{{ user.shop_name or 'Green Nursery' }}">
+                </div>
+
+                <div class="form-group">
+                  <label>Business Type</label>
+                  <input type="text" name="business_type" value="{{ user.business_type or 'Plant Nursery' }}">
+                </div>
+
+                <div class="form-group">
+                  <label>Contact Number</label>
+                  <input type="text" name="shop_contact" value="{{ user.shop_contact or user.phone or '' }}">
+                </div>
+
+                <div class="form-group">
+                  <label>Email</label>
+                  <input type="email" name="shop_email" value="{{ user.shop_email or user.email or '' }}">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Shop Description</label>
+                <textarea name="shop_description" rows="4">{{ user.shop_description or 'We provide healthy indoor, outdoor, fruit-bearing, and flowering plants for homes and gardens.' }}</textarea>
+              </div>
+
+              <button type="submit" class="save-btn">Save Shop Info</button>
+            </form>
+          </div>
+
+          <!-- PASSWORD -->
+          <div class="profile-box hidden-section" id="passwordSection">
+            <h2>Change Password</h2>
+
+            <form class="profile-form" id="passwordForm">
+              <div class="form-group">
+                <label>Current Password</label>
+                <input type="password" name="current_password" placeholder="Enter current password">
+              </div>
+
+              <div class="form-group">
+                <label>New Password</label>
+                <input type="password" name="new_password" placeholder="Enter new password">
+              </div>
+
+              <div class="form-group">
+                <label>Confirm New Password</label>
+                <input type="password" name="confirm_password" placeholder="Confirm new password">
+              </div>
+
+              <button type="submit" class="save-btn">Update Password</button>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="message-widget" data-message-role="owner">
+    <button id="messageToggle" class="message-toggle-btn">
+      Message
+    </button>
+
+    <div id="messengerPanel" class="messenger-panel hidden expanded">
+      <div class="messenger-header">
+        <h3>Owner Messages</h3>
+
+        <div class="messenger-actions">
+          <button id="collapseMessenger" title="Collapse">—</button>
+          <button id="closeMessenger" title="Close">✕</button>
+        </div>
+      </div>
+
+      <div class="messenger-body">
+        <!-- CONTACT LIST -->
+        <div class="contact-list" id="messageContacts">
+          <div class="contact active" data-name="Customers">
+            <img src="/static/default-profile.jpg" alt="Customers">
+            <span>Customers</span>
+          </div>
+        </div>
+
+        <!-- CHAT AREA -->
+        <div class="chat-area">
+          <div class="chat-header">
+            <h4 id="chatTitle">Customers</h4>
+          </div>
+
+          <div class="chat-messages" id="chatMessages">
+            <div class="message received">Customer inquiries will appear here.</div>
+          </div>
+
+          <form class="chat-input-area" id="messageForm">
+            <input type="hidden" id="messageThreadId" name="thread_id">
+            <input type="text" id="messageInput" name="message" placeholder="Type a message..." autocomplete="off">
+            <button type="submit">Send</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/owner_profile.js"></script>
+  <script src="/static/message_widget.js"></script>
+</body>
+</html>

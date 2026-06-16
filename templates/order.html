@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Owner Orders</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/order.css" />
+</head>
+<body>
+
+  <nav class="owner-navbar">
+    <h1 class="logo">🪴 Green Owner</h1>
+    <ul>
+      <li><a href="/Owner">Dashboard</a></li>
+      <li><a href="/Orders" class="active">Orders</a></li>
+      <li><a href="/Inventory">Inventory</a></li>
+      <li><a href="/OwnerProfile">Profile</a></li>
+    </ul>
+  </nav>
+
+  <section class="owner-orders">
+    <div class="orders-wrapper">
+      <div class="orders-header">
+        <h1>Customer Orders</h1>
+        <p>Track customer purchases and manage order status.</p>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="order-flashes">
+            {% for category, message in messages %}
+              <div class="order-flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <div class="orders-controls">
+        <input type="text" id="orderSearch" placeholder="Search by customer or order ID">
+        <select id="statusFilter">
+          <option value="all">All Orders</option>
+          <option value="to_pay">To Pay</option>
+          <option value="to_ship">To Ship</option>
+          <option value="to_receive">To Receive</option>
+          <option value="completed">Completed</option>
+          <option value="return_refund">Return / Refund</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+
+      <div class="orders-list" id="ordersList">
+        {% if orders %}
+          {% for order in orders %}
+          <div class="order-card"
+               data-status="{{ order.status }}"
+               data-customer="{{ order.customer_name|lower }}"
+               data-order="{{ order.order_code|lower }}">
+            <div class="order-card-top">
+              <div>
+                <h2>Order #{{ order.order_code }}</h2>
+                <p class="customer-name">{{ order.customer_name }}</p>
+              </div>
+              <span class="order-badge {{ order.status }}">{{ order.status_label }}</span>
+            </div>
+
+            <div class="order-details">
+              <div class="detail-box"><strong>Plants:</strong> {{ order.plants }}</div>
+              <div class="detail-box"><strong>Total:</strong> &#8369;{{ order.total }}</div>
+              <div class="detail-box"><strong>Payment:</strong> {{ order.payment_method_label }}</div>
+              <div class="detail-box"><strong>Payment Status:</strong> {{ order.payment_status|capitalize }}</div>
+              <div class="detail-box"><strong>Date:</strong> {{ order.display_date or 'No date recorded' }}</div>
+              <div class="detail-box"><strong>Contact:</strong> {{ order.contact_number }}</div>
+              <div class="detail-box"><strong>Assigned Driver:</strong> {{ order.assigned_driver_name or 'Not assigned yet' }}</div>
+              <div class="detail-box"><strong>Live GPS:</strong> {{ 'Active' if order.driver_live_active else 'Inactive' }}</div>
+              <div class="detail-box full"><strong>Address:</strong> {{ order.delivery_address }}</div>
+            </div>
+
+            {% if order.return_request_id %}
+            <div class="return-review-box">
+              <h3>Return / Refund Request</h3>
+              <p><strong>Status:</strong> {{ order.return_request_status|capitalize }}</p>
+              <p><strong>Customer statement:</strong> {{ order.return_reason }}</p>
+              {% if order.return_proof_photo %}
+              <a href="{{ order.return_proof_photo }}" target="_blank">
+                <img src="{{ order.return_proof_photo }}" alt="Return proof for order {{ order.order_code }}">
+              </a>
+              {% endif %}
+              {% if order.return_owner_response %}
+              <p><strong>Owner response:</strong> {{ order.return_owner_response }}</p>
+              {% endif %}
+              {% if order.return_request_status == 'approved' %}
+              <p><strong>Pickup Status:</strong> {{ order.return_pickup_status or 'Pending Pickup' }}</p>
+              <p><strong>Refund Status:</strong> {{ order.return_refund_status or 'Pending' }}</p>
+              <p><strong>Pickup Driver:</strong> {{ order.return_pickup_driver_name or 'Not assigned yet' }}</p>
+              {% endif %}
+
+              {% if order.return_request_status == 'pending' %}
+              <form class="return-decision-form" action="/review-return-request/{{ order.return_request_id }}" method="POST">
+                <textarea name="owner_response" rows="3" placeholder="Write your review or reason"></textarea>
+                <div class="order-actions">
+                  <button class="action-btn complete-btn" type="submit" name="decision" value="approved">Approve Request</button>
+                  <button class="action-btn cancel-btn" type="submit" name="decision" value="disapproved">Disapprove Request</button>
+                </div>
+              </form>
+              {% elif order.return_request_status == 'approved' %}
+              <details class="tracking-update-form">
+                <summary>Return / Refund Actions</summary>
+                {% if not order.return_pickup_driver_id and order.return_pickup_status != 'Received by Owner' %}
+                <form action="/owner/return-refund/{{ order.return_request_id }}/assign-pickup-driver" method="POST">
+                  <div class="tracking-fields">
+                    <select name="driver_id" required>
+                      <option value="">Select pickup driver</option>
+                      {% for driver in drivers %}
+                        <option value="{{ driver.id }}">{{ driver.fullname }} - {{ driver.email }}</option>
+                      {% endfor %}
+                    </select>
+                    <button class="action-btn complete-btn" type="submit">Assign Pickup Driver</button>
+                  </div>
+                </form>
+                {% else %}
+                <form action="/owner/return-refund/{{ order.return_request_id }}/cancel-pickup-driver" method="POST">
+                  <input type="text" name="cancel_reason" placeholder="Reason for cancelling pickup assignment">
+                  <button class="action-btn cancel-btn" type="submit">Cancel Pickup Driver</button>
+                </form>
+                {% endif %}
+                <form action="/owner/return-refund/{{ order.return_request_id }}/confirm-received" method="POST">
+                  <button class="action-btn ship-btn" type="submit">Confirm Item Received</button>
+                </form>
+                <form action="/owner/return-refund/{{ order.return_request_id }}/mark-refunded" method="POST">
+                  <button class="action-btn complete-btn" type="submit">Mark Refunded</button>
+                </form>
+              </details>
+              {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="order-actions">
+              {% if order.status == 'to_pay' %}
+              <form action="/update-order-status/{{ order.id }}" method="POST">
+                <input type="hidden" name="status" value="to_ship">
+                <button class="action-btn ship-btn" type="submit">Mark To Ship</button>
+              </form>
+              {% elif order.status == 'to_ship' %}
+              <form action="/update-order-status/{{ order.id }}" method="POST">
+                <input type="hidden" name="status" value="to_receive">
+                <button class="action-btn ship-btn" type="submit">Mark To Receive</button>
+              </form>
+              {% elif order.status == 'to_receive' %}
+              <form action="/update-order-status/{{ order.id }}" method="POST">
+                <input type="hidden" name="status" value="completed">
+                <button class="action-btn complete-btn" type="submit">Mark Completed</button>
+              </form>
+              {% endif %}
+
+              {% if order.status in ['to_pay', 'to_ship'] %}
+              <form action="/update-order-status/{{ order.id }}" method="POST">
+                <input type="hidden" name="status" value="cancelled">
+                <button class="action-btn cancel-btn" type="submit">Cancel</button>
+              </form>
+              {% endif %}
+            </div>
+
+            <details class="tracking-update-form">
+              <summary>Update Tracking</summary>
+              <form action="/owner/order/{{ order.id }}/tracking" method="POST">
+              <div class="tracking-fields">
+                <select name="tracking_status" required>
+                  <option value="">Select tracking status</option>
+                  <option value="Packed">Packed</option>
+                  <option value="In Transit">In Transit</option>
+                  <option value="At Delivery Hub">At Delivery Hub</option>
+                  <option value="Out for Delivery">Out for Delivery</option>
+                  <option value="Delivered">Delivered</option>
+                </select>
+                <input type="text" name="location" placeholder="Current location" required>
+              </div>
+              <textarea name="note" rows="2" placeholder="Tracking note"></textarea>
+              <button class="action-btn ship-btn" type="submit">Update Tracking</button>
+              </form>
+            </details>
+
+            <div class="tracking-update-form">
+              {% if order.status == 'cancelled' %}
+                <p class="tracking-help">Cancelled - no driver assignment</p>
+              {% elif order.assigned_driver_id %}
+                <h3>Assigned Driver: {{ order.assigned_driver_name }}</h3>
+                <div class="order-actions">
+                  <a class="action-btn ship-btn" href="/owner/order/{{ order.id }}/driver-location">View Driver Location</a>
+                  <form action="/owner/order/{{ order.id }}/cancel-driver-assignment" method="POST">
+                    <input type="hidden" name="assignment_type" value="delivery">
+                    <input type="text" name="cancel_reason" placeholder="Reason, optional">
+                    <button class="action-btn cancel-btn" type="submit">Cancel Assignment</button>
+                  </form>
+                </div>
+              {% else %}
+                <details>
+                  <summary>Assign Driver</summary>
+                  <form action="/owner/order/{{ order.id }}/assign-driver" method="POST">
+                    <div class="tracking-fields">
+                      <select name="driver_id" required>
+                        <option value="">Select driver</option>
+                        {% for driver in drivers %}
+                          <option value="{{ driver.id }}">{{ driver.fullname }} - {{ driver.email }}</option>
+                        {% endfor %}
+                      </select>
+                      <button class="action-btn complete-btn" type="submit">Assign Driver</button>
+                    </div>
+                    {% if not drivers %}
+                    <p class="tracking-help">No driver accounts available yet.</p>
+                    {% endif %}
+                  </form>
+                </details>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="order-card">
+            <p>No customer orders yet.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <div class="message-widget" data-message-role="owner">
+    <button id="messageToggle" class="message-toggle-btn" type="button">Message</button>
+
+    <div id="messengerPanel" class="messenger-panel hidden expanded">
+      <div class="messenger-header">
+        <h3>Owner Messages</h3>
+        <div class="messenger-actions">
+          <button id="collapseMessenger" title="Collapse" type="button">-</button>
+          <button id="closeMessenger" title="Close" type="button">x</button>
+        </div>
+      </div>
+
+      <div class="messenger-body">
+        <div class="contact-list" id="messageContacts">
+          <div class="contact active" data-name="Customers">
+            <img src="/static/default-profile.jpg" alt="Customers">
+            <span>Customers</span>
+          </div>
+        </div>
+
+        <div class="chat-area">
+          <div class="chat-header">
+            <h4 id="chatTitle">Customers</h4>
+          </div>
+          <div class="chat-messages" id="chatMessages">
+            <div class="message received">Customer inquiries will appear here.</div>
+          </div>
+          <form class="chat-input-area" id="messageForm">
+            <input type="hidden" id="messageThreadId" name="thread_id">
+            <input type="text" id="messageInput" name="message" placeholder="Type a message..." autocomplete="off">
+            <button type="submit">Send</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/order.js"></script>
+  <script src="/static/message_widget.js"></script>
+</body>
+</html>

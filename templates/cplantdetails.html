@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ plant.name }} Details</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/cplantdetails.css">
+</head>
+<body>
+
+  <nav class="customer-navbar">
+    <h1 class="logo">🪴 Green</h1>
+    <ul>
+      <li><a href="/customer">Home</a></li>
+      <li><a href="/cart">Cart</a></li>
+      <li><a href="/my-purchases">My Purchases</a></li>
+      <li><a href="/profile">Profile</a></li>
+    </ul>
+  </nav>
+
+  <main class="details-section">
+    <section class="details-container">
+
+      <div class="details-gallery">
+        {% if gallery %}
+        <div class="details-image">
+          <img id="mainPlantImage" src="{{ gallery[0] }}" alt="{{ plant.name }}">
+        </div>
+
+        <div class="sample-images" aria-label="Plant sample images">
+          {% for image in gallery %}
+          <button class="sample-image {% if loop.first %}active{% endif %}" type="button" data-image="{{ image }}">
+            <img src="{{ image }}" alt="{{ plant.name }} sample {{ loop.index }}">
+          </button>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="details-image no-sample-image">
+          <span>No plant sample photo uploaded yet.</span>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="details-info">
+        <span class="plant-category">{{ category_label }}</span>
+        <h1>{{ plant.name }}</h1>
+        <p class="price">&#8369;{{ plant.price }}</p>
+
+        <p class="description">{{ description }}</p>
+
+        <div class="plant-meta">
+          <p><strong>Stock:</strong> {{ plant.stock }} available</p>
+          <p><strong>Sold:</strong> {{ plant.sold if plant.sold is defined else 0 }}</p>
+          <p><strong>Size:</strong> Small, Medium, Large</p>
+          <p><strong>Care:</strong> Water when the top soil feels dry</p>
+        </div>
+
+        <div class="quantity-section">
+          <label>Quantity &amp; Size</label>
+
+          <div class="quantity-size-wrapper">
+            <div class="quantity-box">
+              <button type="button" id="decreaseQty">-</button>
+              <span id="quantityValue">1</span>
+              <button type="button" id="increaseQty">+</button>
+            </div>
+
+            <div class="size-options">
+              <button class="size-btn active" type="button" data-size="small">Small</button>
+              <button class="size-btn" type="button" data-size="medium">Medium</button>
+              <button class="size-btn" type="button" data-size="large">Large</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="details-buttons">
+          <form action="/add_to_cart/{{ plant.id }}" method="POST">
+            <input type="hidden" name="quantity" class="selected-quantity" value="1">
+            <input type="hidden" name="size" class="selected-size" value="small">
+            <input type="hidden" name="next" value="/cart">
+            <button class="cart-btn" type="submit">Add to Cart</button>
+          </form>
+
+          <form action="/buy_now/{{ plant.id }}" method="POST">
+            <input type="hidden" name="quantity" class="selected-quantity" value="1">
+            <input type="hidden" name="size" class="selected-size" value="small">
+            <button class="buy-btn" type="submit">Buy Now</button>
+          </form>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="reviews-section">
+      <div class="reviews-header">
+        <p>Buyer Reviews</p>
+        <h2>What previous buyers say</h2>
+      </div>
+
+      <div class="reviews-grid">
+        {% if reviews %}
+          {% for review in reviews %}
+          <article class="review-card">
+            <div class="review-top">
+              <strong>{{ review.name }}</strong>
+              <span>
+                {% for _ in range(review.rating) %}&#9733;{% endfor %}
+                {% for _ in range(5 - review.rating) %}&#9734;{% endfor %}
+              </span>
+            </div>
+            <p>{{ review.comment }}</p>
+          </article>
+          {% endfor %}
+        {% else %}
+          <p class="empty-reviews">No customer reviews yet.</p>
+        {% endif %}
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/plantdetails.js"></script>
+</body>
+</html>

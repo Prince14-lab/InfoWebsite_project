@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login / Sign Up</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/login.css">
+</head>
+<body>
+
+  <div class="auth-page">
+    <div class="auth-container">
+
+      <div class="auth-left">
+        <h1>🪴 Green</h1>
+        <p>Welcome back! Login or create an account to continue exploring our plant collection.</p>
+      </div>
+
+      <div class="auth-right">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="auth-alerts">
+              {% for category, message in messages %}
+                <div class="auth-alert {{ category }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="form-toggle">
+          <button id="loginBtn" class="active" type="button">Login</button>
+          <button id="signupBtn" type="button">Sign Up</button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form id="loginForm" class="auth-form" method="POST" action="{{url_for('auth.login')}}">
+          <h2>Login</h2>
+
+          <input type="text" name="username" placeholder="Username" required>
+          <input type="password" name="password" placeholder="Password" required>
+          <p class="forgot-password-link">
+            <a href="{{ url_for('auth.forgot_password') }}">Forgot Password?</a>
+          </p>
+
+          <button type="submit" class="submit-btn">Login</button>
+
+          <p class="switch-text">
+            Don't have an account?
+            <span id="showSignup">Sign up here</span>
+          </p>
+        </form>
+
+        <!-- SIGN UP FORM -->
+        <form id="signupForm" class="auth-form hidden" method="POST" action="{{url_for('auth.signup')}}">
+          <h2>Create Account</h2>
+
+          <input type="text" name="fullname" placeholder="Full Name" required>
+          <input type="email" name="email" placeholder="Email Address" required>
+          <input type="text" name="username" placeholder="Username" required>
+          <input type="password" name="password" placeholder="Password" required>
+          <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+
+          <button type="submit" class="submit-btn">Sign Up</button>
+
+          <p class="switch-text">
+            Already have an account?
+            <span id="showLogin">Login here</span>
+          </p>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/static/login.js"></script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Green Shop</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/customer.css">
+</head>
+<body>
+
+  <nav class="customer-navbar">
+    <h1 class="logo">🪴 Green</h1>
+    <ul>
+      <li><a href="/customer">Home</a></li>
+      <li><a href="/cart">Cart</a></li>
+      <li><a href="/my-purchases">My Purchases</a></li>
+      <li><a href="/profile">Profile</a></li>
+    </ul>
+  </nav>
+
+  <section class="shop-section">
+    <div class="shop-controls">
+      <input type="text" id="searchInput" placeholder="Search plants...">
+
+      <div class="category-buttons">
+        <button class="category-btn active" data-category="all">All</button>
+        <button class="category-btn" data-category="indoor">Indoor</button>
+        <button class="category-btn" data-category="outdoor">Outdoor</button>
+        <button class="category-btn" data-category="fruit">Fruit Bearing</button>
+        <button class="category-btn" data-category="flowering">Flowering</button>
+      </div>
+    </div>
+
+    <div class="plant-grid" id="plantGrid">
+
+  {% for plant in plants %}
+  <a href="/plant/{{ plant.id }}" class="plant-card-link">
+
+    <div class="plant-card"
+         data-category="{{ plant.category }}"
+         data-name="{{ plant.name | lower }}">
+
+      <img src="{{ plant.image_url }}" alt="{{ plant.name }}">
+
+      <div class="plant-info">
+        <h3>{{ plant.name }}</h3>
+
+        <div class="plant-meta">
+          <span class="plant-price">₱{{ plant.price }}</span>
+
+          <!-- if you added sold -->
+          <span class="plant-sold">
+            {{ plant.sold if plant.sold is defined else 0 }} sold
+          </span>
+
+        </div>
+      </div>
+
+    </div>
+
+  </a>
+  {% endfor %}
+
+</div>
+  </section>
+
+  <div class="message-widget" data-message-role="customer">
+
+  <!-- Floating button -->
+  <button id="messageToggle" class="message-toggle-btn">
+    Message
+  </button>
+
+  <!-- Messenger panel -->
+  <div id="messengerPanel" class="messenger-panel hidden expanded">
+
+    <div class="messenger-header">
+      <h3>Messages</h3>
+
+      <div class="messenger-actions">
+        <button id="collapseMessenger" title="Collapse">—</button>
+        <button id="closeMessenger" title="Close">✕</button>
+      </div>
+    </div>
+
+    <div class="messenger-body">
+
+      <!-- LEFT CONTACT LIST -->
+      <div class="contact-list" id="messageContacts">
+        <div class="contact active" data-chat-target="owner">
+          <img src="/static/default-profile.jpg" alt="Green Owner">
+          <span>Green Owner</span>
+        </div>
+        <div class="contact" data-chat-target="plantpal">
+          <img src="/static/plantpal-profile.svg" alt="PlantPal">
+          <span>PlantPal</span>
+        </div>
+      </div>
+
+      <!-- RIGHT CONVERSATION -->
+      <div class="chat-area">
+        <div class="chat-header">
+          <h4 id="chatTitle">Green Owner</h4>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+          <div class="message received">Loading conversation...</div>
+        </div>
+
+        <div class="quick-replies" id="quickReplies" style="display: none;">
+          <button class="quick-reply-btn" type="button">Recommend a plant</button>
+          <button class="quick-reply-btn" type="button">How do I checkout?</button>
+          <button class="quick-reply-btn" type="button">Where is my order?</button>
+          <button class="quick-reply-btn" type="button">Payment methods</button>
+          <button class="quick-reply-btn" type="button">Plant care tips</button>
+          <button class="quick-reply-btn" type="button">How much is delivery?</button>
+        </div>
+
+        <form class="chat-input-area" id="messageForm">
+          <input type="text" id="messageInput" name="message" placeholder="Type a message..." autocomplete="off">
+          <button id="chatbotSend" type="submit">Send</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+  <script src="/static/customer.js"></script>
+  <script src="/static/message_widget.js"></script>
+</body>
+</html>

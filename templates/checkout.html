@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/checkout.css">
+</head>
+<body>
+
+  <nav class="customer-navbar">
+    <h1 class="logo">🪴 Green</h1>
+    <ul>
+      <li><a href="/customer">Home</a></li>
+      <li><a href="/cart">Cart</a></li>
+      <li><a href="/my-purchases">My Purchases</a></li>
+      <li><a href="/profile">Profile</a></li>
+    </ul>
+  </nav>
+
+  <section class="checkout-section">
+    <div class="checkout-wrapper">
+      <h1 class="checkout-title">Checkout</h1>
+
+      <div class="checkout-layout">
+        <div class="checkout-items-box">
+          <h2>Order Items</h2>
+
+          {% if items %}
+            {% for item in items %}
+            <div class="checkout-item">
+              <img src="{{ item.image_url }}" alt="{{ item.name }}">
+              <div class="item-info">
+                <h3>{{ item.name }}</h3>
+                <p>Unit Price: &#8369;{{ item.price }}</p>
+                <p>Quantity: {{ item.quantity }}</p>
+                <p>Size: {{ item.size|capitalize }}</p>
+              </div>
+              <div class="item-total">
+                <p>&#8369;{{ item.price * item.quantity }}</p>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <p>Your checkout is empty.</p>
+          {% endif %}
+        </div>
+
+        <form class="checkout-summary" action="/place-order" method="POST">
+          <input type="hidden" name="source" value="{{ checkout_source }}">
+          <input type="hidden" name="cart_item_ids" value="{{ checkout_cart_ids }}">
+          <h2>Order Summary</h2>
+
+          <div class="summary-row">
+            <span>Total Items</span>
+            <span>{{ item_count }}</span>
+          </div>
+
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span>&#8369;{{ subtotal }}</span>
+          </div>
+
+          <div class="summary-row">
+            <span>Delivery Fee</span>
+            <span>&#8369;{{ delivery_fee }}</span>
+          </div>
+
+          <div class="summary-row total">
+            <span>Total Checkout Price</span>
+            <span>&#8369;{{ total }}</span>
+          </div>
+
+          <div class="payment-section">
+            <h3>Payment Method</h3>
+
+            {% for value, label in payment_method.items() %}
+            <label class="payment-option">
+              <input type="radio" name="payment_method" value="{{ value }}" {% if loop.first %}checked{% endif %}>
+              <span>{{ label }}</span>
+            </label>
+            {% endfor %}
+
+            <p class="payment-reminder">
+              Reminder: For GCash and Bank Transfer payments, only half of the paid amount will be refunded if you cancel the order.
+            </p>
+          </div>
+
+          <div class="delivery-section">
+            <h3>Delivery Address</h3>
+            <input type="text" name="contact_number" placeholder="Contact number" value="{{ contact_number }}" required>
+            <textarea name="delivery_address" rows="4" placeholder="Enter delivery address" required>{{ delivery_address }}</textarea>
+          </div>
+
+          <button class="place-order-btn" type="submit" {% if not items %}disabled{% endif %}>Place Order</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+</body>
+</html>

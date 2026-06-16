@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Profile</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/customer_profile.css">
+</head>
+<body>
+
+  <nav class="customer-navbar">
+    <h1 class="logo">🪴 Green Customer</h1>
+    <ul>
+      <li><a href="/customer">Home</a></li>
+      <li><a href="/cart">Cart</a></li>
+      <li><a href="/my-purchases">My Purchases</a></li>
+      <li><a href="/profile" class="active">Profile</a></li>
+    </ul>
+  </nav>
+
+  <section class="customer-profile-section">
+    <div class="customer-profile-wrapper">
+      <div class="customer-profile-layout">
+
+        <aside class="customer-profile-card">
+          <div class="customer-avatar">
+            <img src="{{ user.profile_photo or ('https://i.pravatar.cc/180?u=' ~ user.username) }}" alt="Customer Profile">
+            <form class="avatar-edit-form" action="/update-profile-photo" method="POST" enctype="multipart/form-data">
+              <label class="avatar-edit-btn" title="Change profile photo">
+                <span>&#9998;</span>
+                <input type="file" name="profile_photo" accept="image/*" onchange="this.form.submit()">
+              </label>
+            </form>
+          </div>
+
+          <h2>{{ user.fullname }}</h2>
+          <p>Customer Account</p>
+
+          <div class="customer-badge">Green Customer</div>
+
+          <div class="profile-side-actions">
+            <button id="showCustomerInfo" type="button">Customer Info</button>
+            <button id="showDeliverySection" type="button">Delivery Details</button>
+            <button id="showPasswordSection" type="button">Change Password</button>
+            <a href="{{ url_for('auth.logout') }}" class="logout-btn">Logout</a>
+          </div>
+        </aside>
+
+        <div class="customer-profile-content">
+
+          <div class="profile-box active-section" id="customerInfoSection">
+            <h2>Customer Information</h2>
+
+            <form class="profile-form" id="customerForm">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Full Name</label>
+                  <input type="text" name="fullname" value="{{ user.fullname or '' }}" required>
+                </div>
+
+                <div class="form-group">
+                  <label>Email Address</label>
+                  <input type="email" name="email" value="{{ user.email or '' }}" required>
+                </div>
+
+                <div class="form-group">
+                  <label>Phone Number</label>
+                  <input type="text" name="phone" value="{{ user.phone or '' }}">
+                </div>
+
+                <div class="form-group">
+                  <label>Username</label>
+                  <input type="text" value="{{ user.username }}" readonly>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Address</label>
+                <textarea name="address" rows="4">{{ user.address or '' }}</textarea>
+              </div>
+
+              <button type="submit" class="save-btn">Save Changes</button>
+            </form>
+          </div>
+
+          <div class="profile-box hidden-section" id="deliverySection">
+            <h2>Delivery Details</h2>
+
+            <form class="profile-form" id="deliveryForm">
+              <input type="hidden" name="email" value="{{ user.email or '' }}">
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Recipient Name</label>
+                  <input type="text" name="fullname" value="{{ user.fullname or '' }}">
+                </div>
+
+                <div class="form-group">
+                  <label>Contact Number</label>
+                  <input type="text" name="phone" value="{{ user.phone or '' }}">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Default Delivery Address</label>
+                <textarea name="address" rows="4">{{ user.address or '' }}</textarea>
+              </div>
+
+              <button type="submit" class="save-btn">Save Delivery Details</button>
+            </form>
+          </div>
+
+          <div class="profile-box hidden-section" id="passwordSection">
+            <h2>Change Password</h2>
+
+            <form class="profile-form" id="passwordForm">
+              <div class="form-group">
+                <label>Current Password</label>
+                <input type="password" name="current_password" placeholder="Enter current password">
+              </div>
+
+              <div class="form-group">
+                <label>New Password</label>
+                <input type="password" name="new_password" placeholder="Enter new password">
+              </div>
+
+              <div class="form-group">
+                <label>Confirm New Password</label>
+                <input type="password" name="confirm_password" placeholder="Confirm new password">
+              </div>
+
+              <button type="submit" class="save-btn">Update Password</button>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="report-widget">
+    <button id="reportToggle" class="report-toggle-btn" type="button" title="Send a report">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M5 3h10l4 4v14H5V3zm9 1.8V8h3.2L14 4.8zM8 11h8v1.7H8V11zm0 4h8v1.7H8V15z"></path>
+      </svg>
+      Report
+    </button>
+
+    <div id="reportPanel" class="report-panel hidden">
+      <div class="report-panel-header">
+        <h3>Report to Admin</h3>
+        <div class="report-panel-actions">
+          <button id="closeReportPanel" type="button" title="Close">x</button>
+        </div>
+      </div>
+
+      <div class="report-panel-body">
+        <div class="report-chat-messages" id="reportChatMessages">
+          {% for report in customer_reports %}
+          <div class="report-message sent">
+            <div class="report-message-top">
+              <strong>{{ report.issue_type or 'Platform Concern' }}</strong>
+              <span class="report-status {{ report.status or 'pending' }}">{{ (report.status or 'pending')|capitalize }}</span>
+            </div>
+            <p>{{ report.description }}</p>
+            {% if report.proof_photo %}
+            <a class="report-proof-link" href="{{ report.proof_photo }}" target="_blank">View proof photo</a>
+            {% endif %}
+            <small>Sent: {{ report.created_at or 'N/A' }}</small>
+          </div>
+          <div class="report-message received">
+            <strong>Admin response</strong>
+            <p>{{ report.admin_response or 'No response yet.' }}</p>
+            <small>{% if report.reviewed_at %}Read: {{ report.reviewed_at }}{% else %}Waiting for admin review{% endif %}</small>
+          </div>
+          {% else %}
+          <div class="report-message received">
+            Send a report to the admin if you notice account issues, suspicious activity, website bugs, payment display problems, or other platform concerns.
+          </div>
+          {% endfor %}
+        </div>
+
+        <form class="report-chat-input-area" method="POST" action="/customer/report" enctype="multipart/form-data">
+          <select name="issue_type" aria-label="Report type">
+            <option value="Account Issue">Account Issue</option>
+            <option value="Suspicious Activity">Suspicious Activity</option>
+            <option value="Website Bug">Website Bug</option>
+            <option value="Payment Display Issue">Payment Display Issue</option>
+            <option value="Escalated Concern">Escalated Concern</option>
+            <option value="Other Concern">Other Concern</option>
+          </select>
+          <textarea name="description" rows="2" placeholder="Type your report..." required></textarea>
+          <label class="report-photo-btn" title="Attach proof photo">
+            Photo
+            <input type="file" name="proof_photo" accept="image/*">
+          </label>
+          <button type="submit">Send</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/profile.js"></script>
+</body>
+</html>

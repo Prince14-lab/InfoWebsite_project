@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Profile</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/admin_profile.css" />
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <h1>🪴 Green Admin</h1>
+      <nav>
+        <a href="/admin">Dashboard</a>
+        <a href="/admin/customers">Customers</a>
+        <a href="/admin/orders">Orders</a>
+        <a href="/admin/drivers">Drivers</a>
+        <a href="/admin/reports">Reports</a>
+        <a href="/admin/profile" class="active">Profile</a>
+      </nav>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-header">
+        <h1>Admin Profile</h1>
+        <p>Manage your account information and login credentials.</p>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="profile-flashes">
+            {% for category, message in messages %}
+              <div class="profile-flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <section class="admin-profile-section">
+        <div class="admin-profile-wrapper">
+          <div class="admin-profile-layout">
+            <div class="admin-profile-card">
+              <div class="admin-avatar">
+                <img src="{{ admin_user.profile_photo or '/static/default-profile.jpg' }}" alt="Admin Profile">
+                <form class="avatar-edit-form" action="/admin/profile/photo" method="POST" enctype="multipart/form-data">
+                  <input type="hidden" name="user_id" value="{{ admin_user.id }}">
+                  <label class="avatar-edit-btn" title="Change profile photo">
+                    ✎
+                    <input type="file" name="profile_photo" accept="image/*" onchange="this.form.submit()">
+                  </label>
+                </form>
+              </div>
+
+              <h2>{{ admin_user.fullname or 'System Admin' }}</h2>
+              <p>{{ admin_user.email or 'Administrator' }}</p>
+              <div class="admin-badge">Administrator Account</div>
+
+              <div class="admin-quick-info">
+                <div class="quick-info-box">
+                  <span>Reviewed Orders</span>
+                  <strong>{{ counts.total_orders }}</strong>
+                </div>
+                <div class="quick-info-box">
+                  <span>Handled Reports</span>
+                  <strong>{{ counts.total_reports }}</strong>
+                </div>
+              </div>
+
+              <div class="profile-side-actions">
+                <button id="showAdminInfo" class="active-tab">Admin Info</button>
+                <button id="showUsernameSection">Change Username</button>
+                <button id="showPasswordSection">Change Password</button>
+                <a href="{{ url_for('auth.logout') }}" class="logout-btn">Logout</a>
+              </div>
+            </div>
+
+            <div class="admin-profile-content">
+              <div class="profile-box active-section" id="adminInfoSection">
+                <h2>Admin Information</h2>
+                <form class="profile-form" method="POST" action="/admin/profile/update">
+                  <input type="hidden" name="user_id" value="{{ admin_user.id }}">
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label>Full Name</label>
+                      <input type="text" name="fullname" value="{{ admin_user.fullname or '' }}">
+                    </div>
+                    <div class="form-group">
+                      <label>Email Address</label>
+                      <input type="email" name="email" value="{{ admin_user.email or '' }}">
+                    </div>
+                    <div class="form-group">
+                      <label>Username</label>
+                      <input type="text" value="{{ admin_user.username or '' }}" readonly>
+                    </div>
+                    <div class="form-group">
+                      <label>Contact Number</label>
+                      <input type="text" name="phone" value="{{ admin_user.phone or '' }}">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Address</label>
+                    <textarea name="address" rows="4">{{ admin_user.address or '' }}</textarea>
+                  </div>
+                  <button type="submit" class="save-btn">Save Changes</button>
+                </form>
+              </div>
+
+              <div class="profile-box hidden-section" id="usernameSection">
+                <h2>Change Username</h2>
+                <form class="profile-form" method="POST" action="/admin/profile/username">
+                  <input type="hidden" name="user_id" value="{{ admin_user.id }}">
+                  <div class="form-group">
+                    <label>Current Username</label>
+                    <input type="text" value="{{ admin_user.username or '' }}" readonly>
+                  </div>
+                  <div class="form-group">
+                    <label>New Username</label>
+                    <input type="text" name="username" placeholder="Enter new username">
+                  </div>
+                  <button type="submit" class="save-btn">Update Username</button>
+                </form>
+              </div>
+
+              <div class="profile-box hidden-section" id="passwordSection">
+                <h2>Change Password</h2>
+                <form class="profile-form" method="POST" action="/admin/profile/password">
+                  <input type="hidden" name="user_id" value="{{ admin_user.id }}">
+                  <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" name="current_password" placeholder="Enter current password">
+                  </div>
+                  <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" name="password" placeholder="Enter new password">
+                  </div>
+                  <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" name="confirm_password" placeholder="Confirm new password">
+                  </div>
+                  <button type="submit" class="save-btn">Update Password</button>
+                </form>
+              </div>
+
+              <div class="profile-box">
+                <h2>SMTP Email Test</h2>
+                <form class="profile-form" method="POST" action="/admin/test-email">
+                  <div class="form-group">
+                    <label>Send Test Email To</label>
+                    <input type="email" name="test_email" placeholder="example@email.com" required>
+                  </div>
+                  <button type="submit" class="save-btn">Send Test Email</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/admin_profile.js"></script>
+</body>
+</html>

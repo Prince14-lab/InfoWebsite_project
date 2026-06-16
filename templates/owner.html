@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Owner Dashboard</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/owner.css">
+</head>
+<body>
+
+  <nav class="owner-navbar">
+    <h1 class="logo">🪴 Green Owner</h1>
+    <ul>
+      <li><a href="/Owner">Dashboard</a></li>
+      <li><a href="/Orders">Orders</a></li>
+      <li><a href="/Inventory">Inventory</a></li>
+      <li><a href="/OwnerProfile">Profile</a></li>
+    </ul>
+  </nav>
+
+  <section class="owner-dashboard">
+    <div class="dashboard-wrapper">
+      <div class="dashboard-header">
+        <h1>Business Overview</h1>
+        <p>Monitor live sales, orders, and plant inventory in one place.</p>
+      </div>
+
+      <div class="summary-cards">
+        <div class="summary-card">
+          <h3>Total Sales</h3>
+          <p>&#8369;{{ total_sales }}</p>
+        </div>
+        <div class="summary-card">
+          <h3>Total Orders</h3>
+          <p>{{ total_orders }}</p>
+        </div>
+        <div class="summary-card">
+          <h3>Pending Orders</h3>
+          <p>{{ pending_orders }}</p>
+        </div>
+        <div class="summary-card">
+          <h3>Completed Orders</h3>
+          <p>{{ completed_orders }}</p>
+        </div>
+        <div class="summary-card">
+          <h3>Plants Sold</h3>
+          <p>{{ total_sold }}</p>
+        </div>
+        <div class="summary-card alert">
+          <h3>Refund Requests</h3>
+          <p>{{ refund_requests }}</p>
+        </div>
+        <div class="summary-card alert">
+          <h3>Low Stock Plants</h3>
+          <p>{{ low_stock }}</p>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+
+        <!-- SALES OVERVIEW -->
+        <div class="dashboard-box large">
+          <div class="sales-overview-head">
+            <div>
+              <h2>Sales Overview</h2>
+              <p>COD sales count after delivery. Paid GCash and card orders count after payment.</p>
+            </div>
+
+            <select id="salesPeriodSelect" class="sales-period-select" aria-label="Select sales overview period">
+              <option value="day">Today</option>
+              <option value="week">This week</option>
+              <option value="month" selected>This month</option>
+              <option value="year">This year</option>
+            </select>
+          </div>
+
+          <div class="sales-summary-row">
+            <p class="sales-period-label" id="salesSelectedLabel">This month</p>
+            <p class="sales-period-total" id="salesSelectedTotal">&#8369;0</p>
+          </div>
+
+          <!-- Data used by owner.js -->
+          <script id="salesDataJson" type="application/json">
+            {{ sales_chart_data | tojson }}
+          </script>
+
+          <div class="sales-chart-wrapper">
+            <canvas id="salesChart"></canvas>
+          </div>
+
+          {% if not sales_chart_data %}
+          <div class="empty-sales">No successfully delivered sales yet.</div>
+          {% endif %}
+        </div>
+
+        <!-- RECENT ORDERS -->
+        <div class="dashboard-box">
+          <h2>Recent Orders</h2>
+          <div class="order-list">
+            {% if recent_orders %}
+              {% for order in recent_orders %}
+              <div class="order-row">
+                <span>#{{ order.order_code }}</span>
+                <span>{{ order.customer_name }}</span>
+                <span class="status {{ order.status }}">{{ order.status_label }}</span>
+              </div>
+              {% endfor %}
+            {% else %}
+              <p>No orders yet.</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- BEST SELLERS -->
+        <div class="dashboard-box">
+          <h2>Best-Selling Plants</h2>
+          <div class="product-list">
+            {% if best_sellers %}
+              {% for plant in best_sellers %}
+              <div class="product-row">
+                <img src="{{ plant.image_url }}" alt="{{ plant.name }}">
+                <div>
+                  <h4>{{ plant.name }}</h4>
+                  <p>{{ plant.sold if plant.sold is not none else 0 }} sold</p>
+                </div>
+              </div>
+              {% endfor %}
+            {% else %}
+              <p>No plants yet.</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- LOW STOCK -->
+        <div class="dashboard-box">
+          <h2>Low Stock Alerts</h2>
+          <ul class="stock-alerts">
+            {% if low_stock_plants %}
+              {% for plant in low_stock_plants %}
+              <li>{{ plant.name }} — {{ plant.stock }} left</li>
+              {% endfor %}
+            {% else %}
+              <li>No low stock plants.</li>
+            {% endif %}
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- MESSENGER -->
+  <div class="message-widget" data-message-role="owner">
+    <button id="messageToggle" class="message-toggle-btn" type="button">Message</button>
+
+    <div id="messengerPanel" class="messenger-panel hidden expanded">
+      <div class="messenger-header">
+        <h3>Owner Messages</h3>
+        <div class="messenger-actions">
+          <button id="collapseMessenger" title="Collapse" type="button">—</button>
+          <button id="closeMessenger" title="Close" type="button">✕</button>
+        </div>
+      </div>
+
+      <div class="messenger-body">
+        <div class="contact-list" id="messageContacts">
+          <div class="contact active" data-name="Customers">
+            <img src="/static/default-profile.jpg" alt="Customers">
+            <span>Customers</span>
+          </div>
+        </div>
+
+        <div class="chat-area">
+          <div class="chat-header">
+            <h4 id="chatTitle">Customers</h4>
+          </div>
+          <div class="chat-messages" id="chatMessages">
+            <div class="message received">Customer inquiries will appear here.</div>
+          </div>
+          <form class="chat-input-area" id="messageForm">
+            <input type="hidden" id="messageThreadId" name="thread_id">
+            <input type="text" id="messageInput" name="message" placeholder="Type a message..." autocomplete="off">
+            <button type="submit">Send</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script src="/static/owner.js"></script>
+  <script src="/static/message_widget.js"></script>
+</body>
+</html>

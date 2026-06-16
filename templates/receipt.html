@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-Receipt #{{ order.receipt_code }}</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background:
+        linear-gradient(135deg, rgba(46, 125, 50, 0.12), rgba(255, 255, 255, 0.45)),
+        #f4faf3;
+      color: #1f2d22;
+      padding: 36px 18px;
+    }
+
+    .receipt {
+      max-width: 900px;
+      margin: auto;
+      background: #fff;
+      border: 1px solid #dcebdc;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 18px 45px rgba(31, 89, 38, 0.12);
+    }
+
+    .receipt-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-start;
+      background: #2e7d32;
+      color: #fff;
+      padding: 28px 32px;
+    }
+
+    .brand {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .brand-mark {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #fff;
+      color: #2e7d32;
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+
+    .brand h1 {
+      margin: 0 0 4px;
+      font-size: 1.8rem;
+      letter-spacing: 0;
+    }
+
+    .brand p,
+    .receipt-badge p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.84);
+    }
+
+    .receipt-badge {
+      text-align: right;
+      min-width: 190px;
+    }
+
+    .receipt-badge strong {
+      display: block;
+      font-size: 1.05rem;
+      margin-bottom: 6px;
+    }
+
+    .receipt-body {
+      padding: 30px 32px 34px;
+    }
+
+    .section-title {
+      color: #2e7d32;
+      font-size: 1rem;
+      margin: 0 0 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .box {
+      background: #f7fbf7;
+      border: 1px solid #e2f0e2;
+      border-radius: 12px;
+      padding: 14px;
+      min-height: 74px;
+    }
+
+    .box strong {
+      display: block;
+      color: #2e7d32;
+      margin-bottom: 6px;
+      font-size: 0.88rem;
+    }
+
+    .items-wrap {
+      overflow-x: auto;
+      border: 1px solid #e2f0e2;
+      border-radius: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+    }
+
+    th,
+    td {
+      padding: 14px;
+      border-bottom: 1px solid #e7efe7;
+      text-align: left;
+    }
+
+    th {
+      background: #f0f8f0;
+      color: #2e7d32;
+      font-size: 0.88rem;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .summary {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 18px;
+    }
+
+    .total {
+      min-width: 270px;
+      background: #2e7d32;
+      color: #fff;
+      border-radius: 14px;
+      padding: 18px;
+      text-align: right;
+      font-weight: bold;
+      font-size: 1.3rem;
+    }
+
+    .total span {
+      display: block;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 0.86rem;
+      margin-bottom: 4px;
+      font-weight: 400;
+    }
+
+    .receipt-note {
+      margin: 22px 0 0;
+      color: #5e6d60;
+      line-height: 1.5;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      background: #4CAF50;
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn.secondary {
+      background: #edf7ed;
+      color: #2e7d32;
+    }
+
+    @media (max-width: 700px) {
+      .receipt-header,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .receipt-header {
+        display: grid;
+      }
+
+      .receipt-badge {
+        text-align: left;
+      }
+
+      .receipt-body {
+        padding: 24px 18px;
+      }
+
+      .total {
+        width: 100%;
+        min-width: 0;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+        padding: 0;
+      }
+
+      .receipt {
+        box-shadow: none;
+        border: 0;
+      }
+
+      .actions {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="receipt">
+    <header class="receipt-header">
+      <div class="brand">
+        <div class="brand-mark">&#129716;</div>
+        <div>
+          <h1>Green Nursery</h1>
+          <p>Official customer e-receipt</p>
+        </div>
+      </div>
+
+      <div class="receipt-badge">
+        <strong>Receipt #{{ order.receipt_code }}</strong>
+        <p>{{ order.receipt_date }}</p>
+      </div>
+    </header>
+
+    <div class="receipt-body">
+      <h2 class="section-title">Customer & Order Details</h2>
+      <div class="grid">
+        <div class="box"><strong>Customer</strong>{{ order.fullname }}</div>
+        <div class="box"><strong>Contact</strong>{{ order.phone or order.contact_number }}</div>
+        <div class="box"><strong>Email</strong>{{ order.email or 'N/A' }}</div>
+        <div class="box"><strong>Delivery Address</strong>{{ order.delivery_address or order.address }}</div>
+        <div class="box"><strong>Payment Method</strong>{{ order.payment_method }}</div>
+        <div class="box"><strong>Payment Status</strong>{{ order.payment_status }}</div>
+        <div class="box"><strong>Paid At</strong>{{ order.paid_at or 'N/A' }}</div>
+        <div class="box"><strong>Order Status</strong>{{ order.receipt_status }}</div>
+      </div>
+
+      <h2 class="section-title">Purchased Plants</h2>
+      <div class="items-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Plant</th>
+              <th>Size</th>
+              <th>Qty</th>
+              <th>Unit Price</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr>
+              <td>{{ item.plant_name }}</td>
+              <td>{{ item.size }}</td>
+              <td>{{ item.quantity }}</td>
+              <td>&#8369;{{ item.unit_price }}</td>
+              <td>&#8369;{{ item.subtotal }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="summary">
+        <div class="total">
+          <span>Amount Paid</span>
+          &#8369;{{ order.receipt_total }}
+        </div>
+      </div>
+
+      <p class="receipt-note">
+        Thank you for shopping with Green Nursery. Please keep this receipt for your records,
+        order tracking, and return or refund review if needed.
+      </p>
+
+      <div class="actions">
+        <a class="btn secondary" href="/my-purchases">Back</a>
+        <a class="btn" href="/receipt/{{ order.id }}/pdf">Download PDF</a>
+        <button class="btn" type="button" onclick="window.print()">Print</button>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

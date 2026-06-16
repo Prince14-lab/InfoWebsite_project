@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Cart</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/cart.css">
+</head>
+<body>
+
+  <nav class="customer-navbar">
+    <h1 class="logo">🪴 Green</h1>
+    <ul>
+      <li><a href="/customer">Home</a></li>
+      <li><a href="/cart">Cart</a></li>
+      <li><a href="/my-purchases">My Purchases</a></li>
+      <li><a href="/profile">Profile</a></li>
+    </ul>
+  </nav>
+
+  <section class="cart-section">
+    <div class="cart-wrapper">
+      <h1 class="cart-title">My Cart</h1>
+
+      <div class="cart-layout">
+
+        <!-- CART ITEMS -->
+        <div class="cart-items">
+          {% if items %}
+            {% for item in items %}
+            <div class="cart-card" data-id="{{ item.id }}">
+
+              <input type="checkbox" class="select-item">
+
+              <img src="{{ item.image_url }}" alt="{{ item.name }}">
+
+              <div class="cart-info">
+                <h3>{{ item.name }}</h3>
+                <p class="price">₱{{ "%.2f"|format(item.price) }}</p>
+
+                <!-- SIZE -->
+                <div class="size-options">
+                  <button class="size-btn {% if item.size == 'Small' %}active{% endif %}" data-size="Small">Small</button>
+                  <button class="size-btn {% if item.size == 'Medium' %}active{% endif %}" data-size="Medium">Medium</button>
+                  <button class="size-btn {% if item.size == 'Large' %}active{% endif %}" data-size="Large">Large</button>
+                </div>
+
+                <div class="cart-controls">
+                  <div class="quantity-box">
+                    <button class="minus">-</button>
+                    <span class="qty">{{ item.quantity }}</span>
+                    <button class="plus">+</button>
+                  </div>
+
+                  <button class="remove-btn">Remove</button>
+                </div>
+              </div>
+
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="empty-cart">
+              <p>Your cart is empty.</p>
+              <a href="/customer" class="btn-shop">Shop Now</a>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- ORDER SUMMARY -->
+        <div class="cart-summary">
+          <h2>Order Summary</h2>
+
+          <div class="summary-row">
+            <span>Items</span>
+            <span id="summary-count">{{ items|length }}</span>
+          </div>
+
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span id="summary-subtotal">₱{{ "%.2f"|format(subtotal) }}</span>
+          </div>
+
+          <div class="summary-row">
+            <span>Delivery Fee</span>
+            <span id="summary-delivery">₱{{ "%.2f"|format(delivery_fee) }}</span>
+          </div>
+
+          <div class="summary-row total">
+            <span>Total</span>
+            <span id="summary-total">₱{{ "%.2f"|format(total) }}</span>
+          </div>
+
+          <button class="checkout-btn" id="checkoutSelected" type="button" {% if not items %}disabled{% endif %}>
+            Proceed to Checkout
+          </button>
+          <p class="checkout-hint" id="checkoutHint">Select plants to checkout.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- MESSENGER WIDGET -->
+  <div class="message-widget" data-message-role="customer">
+    <button id="messageToggle" class="message-toggle-btn">Message</button>
+
+    <div id="messengerPanel" class="messenger-panel hidden expanded">
+      <div class="messenger-header">
+        <h3>Messages</h3>
+        <div class="messenger-actions">
+          <button id="collapseMessenger" title="Collapse">—</button>
+          <button id="closeMessenger" title="Close">✕</button>
+        </div>
+      </div>
+
+      <div class="messenger-body">
+        <div class="contact-list" id="messageContacts">
+          <div class="contact active" data-name="Green Owner">
+            <img src="/static/default-profile.jpg" alt="Green Owner">
+            <span>Green Owner</span>
+          </div>
+          <div class="contact" data-chat-target="plantpal">
+            <img src="/static/plantpal-profile.svg" alt="PlantPal">
+            <span>PlantPal</span>
+          </div>
+        </div>
+
+        <div class="chat-area">
+          <div class="chat-header">
+            <h4 id="chatTitle">Green Owner</h4>
+          </div>
+          <div class="chat-messages" id="chatMessages">
+            <div class="message received">Loading conversation...</div>
+          </div>
+          <div class="quick-replies" id="quickReplies" style="display: none;">
+            <button class="quick-reply-btn" type="button">Recommend a plant</button>
+            <button class="quick-reply-btn" type="button">How do I checkout?</button>
+            <button class="quick-reply-btn" type="button">Where is my order?</button>
+            <button class="quick-reply-btn" type="button">Payment methods</button>
+            <button class="quick-reply-btn" type="button">Plant care tips</button>
+            <button class="quick-reply-btn" type="button">How much is delivery?</button>
+          </div>
+          <form class="chat-input-area" id="messageForm">
+            <input type="text" id="messageInput" name="message" placeholder="Type a message..." autocomplete="off">
+            <button type="submit">Send</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/cart.js"></script>
+  <script src="/static/message_widget.js"></script>
+
+</body>
+</html>

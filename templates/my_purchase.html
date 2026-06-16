@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Purchases</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/purchase.css">
+</head>
+<body>
+
+  <nav class="customer-navbar">
+    <h1 class="logo">🪴 Green</h1>
+    <ul>
+      <li><a href="/customer">Home</a></li>
+      <li><a href="/cart">Cart</a></li>
+      <li><a href="/my-purchases">My Purchases</a></li>
+      <li><a href="/profile">Profile</a></li>
+    </ul>
+  </nav>
+
+  <section class="purchase-section">
+    <div class="purchase-wrapper">
+      <h1 class="purchase-title">My Purchases</h1>
+
+      <div class="purchase-tabs">
+        <button class="tab-btn active" data-tab="toPay">To Pay</button>
+        <button class="tab-btn" data-tab="toShip">To Ship</button>
+        <button class="tab-btn" data-tab="toReceive">To Receive</button>
+        <button class="tab-btn" data-tab="completed">Completed</button>
+        <button class="tab-btn" data-tab="returnRefund">Returns / Refund</button>
+        <button class="tab-btn" data-tab="cancelled">Cancelled</button>
+      </div>
+
+      {% macro order_cards(orders, empty_text) %}
+        {% if orders %}
+          {% for order in orders %}
+          <div class="order-card">
+            <div class="order-top">
+              <span class="shop-name">Green Nursery - #{{ order.order_code }}</span>
+              <span class="order-status {{ order.status }}">{{ order.status_label }}</span>
+            </div>
+
+            {% for item in order["items"] %}
+            <div class="order-item">
+              <img src="{{ item.image_url }}" alt="{{ item.plant_name }}">
+              <div class="order-info">
+                <h3>{{ item.plant_name }}</h3>
+                <p>Species: {{ item.species }}</p>
+                <p>Quantity: {{ item.quantity }}</p>
+                <p>Size: {{ item.size|capitalize }}</p>
+                <p>Unit Price: &#8369;{{ item.unit_price }}</p>
+              </div>
+              <div class="order-price">&#8369;{{ item.unit_price * item.quantity }}</div>
+            </div>
+            {% endfor %}
+
+            <div class="order-bottom">
+              <p>Payment: <strong>{{ order.payment_method_label }}</strong></p>
+              <p>Payment Status: <strong>{{ order.payment_status|capitalize }}</strong></p>
+              <p>Contact: <strong>{{ order.contact_number }}</strong></p>
+              {% if order.status == "return_refund" and order.return_request_status %}
+              <p>Request: <strong>{{ order.return_request_label }}</strong></p>
+              {% endif %}
+              {% if order.status in ["to_ship", "to_receive", "completed"] or order.order_status in ["Packed", "Out for Delivery", "Delivered", "to_ship", "to_receive", "completed"] or order.latest_tracking_status in ["Packed", "In Transit", "At Delivery Hub", "Out for Delivery", "Delivered"] %}
+                {% if order.latest_tracking_location %}
+                <p>Current Location: <strong>{{ order.latest_tracking_location }}</strong></p>
+                {% endif %}
+                {% if order.latest_tracking_at %}
+                <p>Last Update: <strong>{{ order.latest_tracking_at }}</strong></p>
+                {% endif %}
+              {% endif %}
+              <div class="order-actions">
+                <span class="order-total-action">Total: <strong>&#8369;{{ order.total }}</strong></span>
+                {% if order.status in ["to_ship", "to_receive", "completed"] or order.order_status in ["Packed", "Out for Delivery", "Delivered", "to_ship", "to_receive", "completed"] or order.latest_tracking_status in ["Packed", "In Transit", "At Delivery Hub", "Out for Delivery", "Delivered"] %}
+                <a href="/track-order/{{ order.id }}" class="track-order-btn">Track Order</a>
+                {% endif %}
+                {% if order.status == "to_pay" and order.payment_status|lower == "pending" and order.payment_method in ["PayMongo GCash", "PayMongo Card", "GCash", "Bank Transfer", "Bank"] %}
+                <form action="/pay-order/{{ order.id }}" method="POST">
+                  <button class="pay-now-btn" type="submit">Pay Now</button>
+                </form>
+                {% elif order.can_view_receipt %}
+                <a class="secondary-btn receipt-link" href="/receipt/{{ order.id }}">E-Receipt</a>
+                {% endif %}
+                {% if order.status == "to_ship" %}
+                <form action="/cancel-order/{{ order.id }}" method="POST">
+                  <button class="danger-btn" type="submit">Cancel Order</button>
+                </form>
+                {% endif %}
+              </div>
+            </div>
+
+            {% if order.status == "return_refund" and order.return_owner_response %}
+            <div class="return-request-status">
+              <strong>Owner response:</strong>
+              <p>{{ order.return_owner_response }}</p>
+            </div>
+            {% endif %}
+
+            {% if order.status == "completed" %}
+              {% if order.return_request_status %}
+              <div class="return-request-status">
+                <strong>Return/Refund request:</strong> {{ order.return_request_label }}
+                {% if order.return_owner_response %}
+                <p>{{ order.return_owner_response }}</p>
+                {% endif %}
+              </div>
+              {% else %}
+              <div class="return-request-toggle">
+                <button class="danger-btn return-toggle-btn" type="button" aria-expanded="false">
+                  Request Return / Refund
+                </button>
+
+                <form class="return-form hidden" action="/request-return-refund" method="POST" enctype="multipart/form-data">
+                  <input type="hidden" name="order_id" value="{{ order.id }}">
+                  <h3>Return / Refund Information</h3>
+                  <p>Upload a proof photo and describe what happened if the plant was damaged or not what you ordered.</p>
+                  <input type="file" name="proof_photo" accept="image/*" required>
+                  <textarea name="reason" rows="3" placeholder="Describe the issue" required></textarea>
+                  <button class="danger-btn" type="submit">Send Request</button>
+                </form>
+              </div>
+              {% endif %}
+
+              {% for item in order["items"] %}
+              {% if item.feedback_rating %}
+              <div class="submitted-feedback">
+                <div class="submitted-feedback-top">
+                  <strong>Your feedback for {{ item.plant_name }}</strong>
+                  <span>
+                    {% for _ in range(item.feedback_rating) %}&#9733;{% endfor %}
+                    {% for _ in range(5 - item.feedback_rating) %}&#9734;{% endfor %}
+                  </span>
+                </div>
+                {% if item.feedback_comment %}
+                <p>{{ item.feedback_comment }}</p>
+                {% endif %}
+              </div>
+              {% else %}
+              <form class="rating-form" action="/rate-product" method="POST">
+                <input type="hidden" name="order_id" value="{{ order.id }}">
+                <input type="hidden" name="order_item_id" value="{{ item.order_item_id }}">
+                <input type="hidden" name="plant_id" value="{{ item.plant_id }}">
+                <div class="rating-fields">
+                  <fieldset class="star-rating">
+                    <legend>Rate {{ item.plant_name }}</legend>
+                    <div class="stars">
+                      <input type="radio" id="rating-{{ order.id }}-{{ item.order_item_id }}-5" name="rating" value="5" required>
+                      <label for="rating-{{ order.id }}-{{ item.order_item_id }}-5" title="5 stars">&#9733;</label>
+                      <input type="radio" id="rating-{{ order.id }}-{{ item.order_item_id }}-4" name="rating" value="4">
+                      <label for="rating-{{ order.id }}-{{ item.order_item_id }}-4" title="4 stars">&#9733;</label>
+                      <input type="radio" id="rating-{{ order.id }}-{{ item.order_item_id }}-3" name="rating" value="3">
+                      <label for="rating-{{ order.id }}-{{ item.order_item_id }}-3" title="3 stars">&#9733;</label>
+                      <input type="radio" id="rating-{{ order.id }}-{{ item.order_item_id }}-2" name="rating" value="2">
+                      <label for="rating-{{ order.id }}-{{ item.order_item_id }}-2" title="2 stars">&#9733;</label>
+                      <input type="radio" id="rating-{{ order.id }}-{{ item.order_item_id }}-1" name="rating" value="1">
+                      <label for="rating-{{ order.id }}-{{ item.order_item_id }}-1" title="1 star">&#9733;</label>
+                    </div>
+                  </fieldset>
+                  <textarea name="comment" rows="2" placeholder="Share feedback about the product"></textarea>
+                  <button class="primary-btn" type="submit">Submit Feedback</button>
+                </div>
+              </form>
+              {% endif %}
+              {% endfor %}
+            {% endif %}
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="order-card">
+            <p>{{ empty_text }}</p>
+          </div>
+        {% endif %}
+      {% endmacro %}
+
+      <div class="tab-content active" id="toPay">
+        {{ order_cards(orders_by_status.to_pay, "No orders to pay yet.") }}
+      </div>
+
+      <div class="tab-content" id="toShip">
+        {{ order_cards(orders_by_status.to_ship, "No orders to ship yet.") }}
+      </div>
+
+      <div class="tab-content" id="toReceive">
+        {{ order_cards(orders_by_status.to_receive, "No orders to receive yet.") }}
+      </div>
+
+      <div class="tab-content" id="completed">
+        {{ order_cards(orders_by_status.completed, "No completed orders yet.") }}
+      </div>
+
+      <div class="tab-content" id="returnRefund">
+        {{ order_cards(orders_by_status.return_refund, "No return or refund orders yet.") }}
+      </div>
+
+      <div class="tab-content" id="cancelled">
+        {{ order_cards(orders_by_status.cancelled, "No cancelled orders yet.") }}
+      </div>
+    </div>
+  </section>
+
+  <div class="message-widget" data-message-role="customer">
+    <button id="messageToggle" class="message-toggle-btn" type="button">Message</button>
+
+    <div id="messengerPanel" class="messenger-panel hidden expanded">
+      <div class="messenger-header">
+        <h3>Messages</h3>
+        <div class="messenger-actions">
+          <button id="collapseMessenger" title="Collapse" type="button">-</button>
+          <button id="closeMessenger" title="Close" type="button">x</button>
+        </div>
+      </div>
+
+      <div class="messenger-body">
+        <div class="contact-list" id="messageContacts">
+          <div class="contact active" data-name="Green Owner">
+            <img src="/static/default-profile.jpg" alt="Green Owner">
+            <span>Green Owner</span>
+          </div>
+          <div class="contact" data-chat-target="plantpal">
+            <img src="/static/plantpal-profile.svg" alt="PlantPal">
+            <span>PlantPal</span>
+          </div>
+        </div>
+
+        <div class="chat-area">
+          <div class="chat-header">
+            <h4 id="chatTitle">Green Owner</h4>
+          </div>
+          <div class="chat-messages" id="chatMessages">
+            <div class="message received">Loading conversation...</div>
+          </div>
+          <div class="quick-replies" id="quickReplies" style="display: none;">
+            <button class="quick-reply-btn" type="button">Recommend a plant</button>
+            <button class="quick-reply-btn" type="button">How do I checkout?</button>
+            <button class="quick-reply-btn" type="button">Where is my order?</button>
+            <button class="quick-reply-btn" type="button">Payment methods</button>
+            <button class="quick-reply-btn" type="button">Plant care tips</button>
+            <button class="quick-reply-btn" type="button">How much is delivery?</button>
+          </div>
+          <form class="chat-input-area" id="messageForm">
+            <input type="text" id="messageInput" name="message" placeholder="Type a message..." autocomplete="off">
+            <button type="submit">Send</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/purchase.js"></script>
+  <script src="/static/message_widget.js"></script>
+</body>
+</html>

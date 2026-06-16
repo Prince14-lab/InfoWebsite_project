@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Drivers</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/admin_drivers.css" />
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="sidebar-top">
+        <h1>Green Admin</h1>
+      </div>
+      <nav class="sidebar-menu">
+        <a href="/admin">Dashboard</a>
+        <a href="/admin/customers">Customers</a>
+        <a href="/admin/orders">Orders</a>
+        <a href="/admin/drivers" class="active">Drivers</a>
+        <a href="/admin/reports">Reports</a>
+        <a href="/admin/profile">Profile</a>
+      </nav>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1>Driver Management</h1>
+          <p>
+            {% if selected_driver %}
+              Viewing {{ selected_driver.fullname }}. Return to all drivers when you are done checking the details.
+            {% else %}
+              Create driver accounts, monitor assignments, and manage live delivery access.
+            {% endif %}
+          </p>
+        </div>
+        {% if selected_driver %}
+        <a href="/admin/drivers" class="green-btn">Back to All Drivers</a>
+        {% endif %}
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="admin-flashes">
+            {% for category, message in messages %}
+              <div class="admin-flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      {% if driver_counts %}
+      <section class="admin-stats">
+        <div class="stat-card"><h3>Total Drivers</h3><p>{{ driver_counts.total }}</p></div>
+        <div class="stat-card"><h3>Active Drivers</h3><p>{{ driver_counts.active }}</p></div>
+        <div class="stat-card warning"><h3>Blocked Drivers</h3><p>{{ driver_counts.blocked }}</p></div>
+        <div class="stat-card"><h3>Active Deliveries</h3><p>{{ driver_counts.active_deliveries }}</p></div>
+        <div class="stat-card"><h3>Active Return Pickups</h3><p>{{ driver_counts.active_return_pickups }}</p></div>
+      </section>
+      {% endif %}
+
+      <section class="driver-panel">
+        <details class="add-driver-box">
+          <summary>Add Driver</summary>
+          <form action="/admin/drivers/add" method="POST" class="driver-form">
+            <input type="text" name="fullname" placeholder="Full name" required>
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="temporary_password" placeholder="Temporary password" required>
+            <input type="text" name="phone" placeholder="Phone">
+            <textarea name="address" rows="2" placeholder="Address"></textarea>
+            <button type="submit" class="green-btn">Add Driver</button>
+          </form>
+        </details>
+
+        <div class="drivers-table">
+          <div class="table-row heading">
+            <span>Driver</span>
+            <span>Contact</span>
+            <span>Status</span>
+            <span>Assigned</span>
+            <span>Active Tasks</span>
+            <span>Last GPS</span>
+            <span>Actions</span>
+          </div>
+
+          {% for driver in drivers %}
+          <div class="table-row driver-row">
+            <span>
+              <strong>#{{ driver.id }} {{ driver.fullname }}</strong>
+              <small>{{ driver.username }}</small>
+            </span>
+            <span>
+              {{ driver.email or 'No email' }}
+              <small>{{ driver.phone or 'No phone' }}</small>
+            </span>
+            <span><mark class="{{ driver.account_status or 'active' }}">{{ driver.account_status or 'active' }}</mark></span>
+            <span>{{ driver.total_assigned or 0 }} total<br><small>{{ driver.completed_deliveries or 0 }} completed</small></span>
+            <span>{{ driver.active_deliveries or 0 }} deliveries<br><small>{{ driver.active_return_pickups or 0 }} pickups</small></span>
+            <span>
+              {% if driver.last_live_update %}
+                {{ driver.last_live_update }}<br>
+                <small>{{ 'Active' if driver.live_active else 'Inactive' }}</small>
+              {% else %}
+                No GPS yet
+              {% endif %}
+            </span>
+            <span class="action-stack">
+              <a href="/admin/drivers/{{ driver.id }}" class="small-btn">View</a>
+              <details>
+                <summary class="small-btn">Edit</summary>
+                <form action="/admin/drivers/{{ driver.id }}/edit" method="POST" class="edit-form">
+                  <input type="text" name="fullname" value="{{ driver.fullname or '' }}" required>
+                  <input type="email" name="email" value="{{ driver.email or '' }}" required>
+                  <input type="text" name="username" value="{{ driver.username or '' }}" required>
+                  <input type="text" name="phone" value="{{ driver.phone or '' }}">
+                  <textarea name="address" rows="2">{{ driver.address or '' }}</textarea>
+                  <select name="account_status">
+                    <option value="active" {% if (driver.account_status or 'active') == 'active' %}selected{% endif %}>Active</option>
+                    <option value="blocked" {% if driver.account_status == 'blocked' %}selected{% endif %}>Blocked</option>
+                  </select>
+                  <input type="password" name="new_password" placeholder="New password, optional">
+                  <button type="submit" class="green-btn">Save</button>
+                </form>
+              </details>
+              <form action="/admin/drivers/{{ driver.id }}/toggle-status" method="POST" onsubmit="return confirm('Update this driver account status?');">
+                <button type="submit" class="danger-btn">{{ 'Unblock' if driver.account_status == 'blocked' else 'Block' }}</button>
+              </form>
+            </span>
+          </div>
+          {% else %}
+          <div class="table-row"><span>No driver accounts yet.</span></div>
+          {% endfor %}
+        </div>
+      </section>
+
+      {% if selected_driver %}
+      <section class="driver-panel">
+        <div class="section-head">
+          <h2>{{ selected_driver.fullname }} Assignments</h2>
+          <a href="/admin/drivers" class="small-btn">Close View</a>
+        </div>
+        <div class="drivers-table compact">
+          <div class="table-row heading">
+            <span>Order</span>
+            <span>Customer</span>
+            <span>Type</span>
+            <span>Status</span>
+            <span>Live GPS</span>
+            <span>Assigned</span>
+          </div>
+          {% for item in assignments %}
+          <div class="table-row">
+            <span>#{{ item.order_code or item.order_id }}</span>
+            <span>{{ item.customer_name or 'Customer' }}</span>
+            <span>{{ (item.assignment_type or 'delivery').replace('_', ' ').title() }}</span>
+            <span>{{ item.order_status or 'Pending' }}</span>
+            <span>{{ 'Active' if item.live_active else 'Inactive' }}<br><small>{{ item.last_gps_update or 'No update' }}</small></span>
+            <span>{{ item.assigned_at }}</span>
+          </div>
+          {% else %}
+          <div class="table-row"><span>No assignments recorded.</span></div>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+    </main>
+  </div>
+</body>
+</html>

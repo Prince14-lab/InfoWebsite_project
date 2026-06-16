@@ -1,0 +1,525 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  font-family: Arial, sans-serif;
+  background: #f7fdf7;
+  color: #1f1f1f;
+}
+
+/* NAVBAR */
+.customer-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 18px 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+  z-index: 1000;
+}
+
+.logo {
+  font-size: 1.8rem;
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.customer-navbar ul {
+  list-style: none;
+  display: flex;
+  gap: 28px;
+}
+
+.customer-navbar ul li a {
+  text-decoration: none;
+  color: #2e7d32;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.customer-navbar ul li a:hover {
+  color: #4CAF50;
+}
+
+/* SHOP SECTION */
+.shop-section {
+  padding: 120px 40px 80px;
+  max-width: 1300px;
+  margin: auto;
+}
+
+.shop-controls {
+  margin-bottom: 40px;
+}
+
+/* SEARCH */
+#searchInput {
+  width: 100%;
+  max-width: 500px;
+  display: block;
+  margin: 0 auto 25px;
+  padding: 14px 18px;
+  border: 1px solid #d8e6d8;
+  border-radius: 999px;
+  outline: none;
+  font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+#searchInput:focus {
+  border-color: #4CAF50;
+}
+
+/* CATEGORY BUTTONS */
+.category-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+}
+
+.category-btn {
+  padding: 12px 22px;
+  border: none;
+  border-radius: 999px;
+  background: #edf7ed;
+  color: #2e7d32;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.category-btn:hover {
+  background: #dff0df;
+}
+
+.category-btn.active {
+  background: #4CAF50;
+  color: white;
+}
+
+/* PLANT GRID */
+.plant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 280px));
+  justify-content: center;
+  gap: 28px;
+}
+
+/* MAKE WHOLE CARD CLICKABLE */
+.plant-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* CARD */
+.plant-card {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 100%;
+}
+
+.plant-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 18px 28px rgba(0, 0, 0, 0.12);
+}
+
+/* IMAGE */
+.plant-card img {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  display: block;
+}
+
+/* INFO */
+.plant-info {
+  padding: 18px;
+  text-align: left; /* looks more professional */
+}
+
+.plant-info h3 {
+  font-size: 1.1rem;
+  color: #2e7d32;
+  margin-bottom: 10px;
+}
+
+/* PRICE + SOLD */
+.plant-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* PRICE STYLE */
+.plant-price {
+  font-weight: bold;
+  color: #2e7d32;
+  font-size: 1.1rem;
+}
+
+/* SOLD STYLE */
+.plant-sold {
+  font-size: 0.9rem;
+  color: #777;
+}
+
+.plant-card-link.hidden {
+  display: none;
+}
+
+/* FLOATING MESSAGE BUTTON */
+.message-widget {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 2000;
+}
+
+.message-toggle-btn {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 22px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.message-toggle-btn:hover {
+  background: #3e8e41;
+  transform: translateY(-2px);
+}
+
+/* MAIN PANEL */
+.messenger-panel {
+  width: 720px;
+  height: 480px;
+  background: white;
+  border-radius: 22px;
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.16);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 14px;
+  transition: all 0.3s ease;
+}
+
+/* HIDDEN STATE */
+.hidden {
+  display: none;
+}
+
+/* COLLAPSED STATE */
+.messenger-panel.collapsed {
+  width: 280px;
+  height: 420px;
+}
+
+.messenger-panel.collapsed .chat-area {
+  display: none;
+}
+
+/* HEADER */
+.messenger-header {
+  background: #2e7d32;
+  color: white;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.messenger-header h3 {
+  font-size: 1.1rem;
+}
+
+.messenger-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.messenger-actions button {
+  background: rgba(255,255,255,0.18);
+  color: white;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* BODY */
+.messenger-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* LEFT CONTACT LIST */
+.contact-list {
+  width: 260px;
+  border-right: 1px solid #e7e7e7;
+  background: #f8fcf8;
+  overflow-y: auto;
+}
+
+.contact {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.contact:hover {
+  background: #edf7ed;
+}
+
+.contact.active {
+  background: #e3f3e3;
+}
+
+.contact img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.contact span {
+  color: #2e7d32;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* RIGHT CHAT AREA */
+.chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.chat-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid #ececec;
+  background: #ffffff;
+}
+
+.chat-header h4 {
+  color: #2e7d32;
+  font-size: 1rem;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  background: #fcfffc;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.message {
+  max-width: 75%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.message.received {
+  background: #edf7ed;
+  color: #2e7d32;
+  align-self: flex-start;
+}
+
+.message.sent {
+  background: #4CAF50;
+  color: white;
+  align-self: flex-end;
+}
+
+.quick-replies {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  padding: 12px 14px 0;
+  border-top: 1px solid #eef4ee;
+  background: white;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+}
+
+.quick-reply-btn {
+  border: 1px solid #b9dfbc;
+  background: #edf7ed;
+  color: #2e7d32;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.quick-reply-btn:hover {
+  background: #dff1e0;
+  border-color: #4CAF50;
+  transform: translateY(-1px);
+}
+
+.chat-input-area {
+  display: flex;
+  gap: 10px;
+  padding: 14px;
+  border-top: 1px solid #ececec;
+  background: white;
+}
+
+.chat-input-area input {
+  flex: 1;
+  padding: 12px 14px;
+  border: 1px solid #d9e7d9;
+  border-radius: 999px;
+  outline: none;
+}
+
+.chat-input-area button {
+  border: none;
+  background: #4CAF50;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.attach-btn {
+  border: none;
+  background: #edf7ed;
+  color: #2e7d32;
+  padding: 12px 14px;
+  border-radius: 999px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.attachment-note {
+  align-self: center;
+  color: #5e6d60;
+  font-size: 0.8rem;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.message-attachments {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.message-attachments img {
+  width: 88px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #dcebdc;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .messenger-panel {
+    width: calc(100vw - 24px);
+    height: 70vh;
+    margin-bottom: 10px;
+  }
+
+  .messenger-panel.expanded .messenger-body {
+    flex-direction: column;
+  }
+
+  .messenger-panel.expanded .contact-list {
+    width: 100%;
+    height: 140px;
+    border-right: none;
+    border-bottom: 1px solid #e7e7e7;
+  }
+
+  .messenger-panel.collapsed {
+    width: calc(100vw - 24px);
+    height: 260px;
+  }
+
+  .message-widget {
+    right: 12px;
+    bottom: 12px;
+  }
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .customer-navbar {
+    padding: 16px 20px;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .customer-navbar ul {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .shop-hero-content h1 {
+    font-size: 2.2rem;
+  }
+
+  .shop-section {
+    padding: 30px 20px 70px;
+  }
+}
+
+@media (max-width: 480px) {
+  .category-buttons {
+    gap: 10px;
+  }
+
+  .category-btn {
+    padding: 10px 16px;
+    font-size: 0.95rem;
+  }
+
+  .plant-card img {
+    height: 220px;
+  }
+
+  .plant-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

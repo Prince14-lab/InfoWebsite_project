@@ -1,0 +1,33 @@
+# Environment — never commit real secrets
+.env
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Flask instance folder
+instance/
+
+# SQLite databases (not used here, but safety net)
+*.db
+*.sqlite3
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor folders
+.vscode/
+.idea/
+
+# Claude Code local settings
+.claude/
+
+# Uploaded files are local only — do not commit user uploads
+# (static/profile, static/plants, static/plant_samples, etc. already in repo as placeholders)

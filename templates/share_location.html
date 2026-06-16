@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Share Live Location</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/driver.css">
+</head>
+<body>
+  <header class="driver-header">
+    <div>
+      <h1>Share Live Location</h1>
+      <p>Order #{{ order.order_code or order.id }}</p>
+    </div>
+    <a class="logout-link" href="/driver">Dashboard</a>
+  </header>
+
+  <main class="driver-main">
+    <section class="share-card">
+      <p><strong>Customer:</strong> {{ order.customer_name }}</p>
+      <p><strong>Contact:</strong> {{ order.contact_number or 'No contact number' }}</p>
+      <p><strong>Delivery Address:</strong> {{ order.delivery_address or 'No delivery address' }}</p>
+
+      <div class="location-status" id="locationStatus">Location sharing is stopped.</div>
+      <p>Latitude: <strong id="latitudeText">-</strong></p>
+      <p>Longitude: <strong id="longitudeText">-</strong></p>
+
+      <div class="driver-actions">
+        <button class="primary-btn" id="startSharing" type="button">Start Sharing Location</button>
+        <button class="stop-btn" id="stopSharing" type="button">Stop Sharing Location</button>
+      </div>
+      <p class="helper-note">Browser GPS usually requires HTTPS. Use an ngrok HTTPS URL for phone testing.</p>
+    </section>
+  </main>
+
+  <script>
+    const orderId = {{ order.id }};
+    const statusText = document.getElementById("locationStatus");
+    const latitudeText = document.getElementById("latitudeText");
+    const longitudeText = document.getElementById("longitudeText");
+    const startButton = document.getElementById("startSharing");
+    const stopButton = document.getElementById("stopSharing");
+    let watchId = null;
+    let lastSentAt = 0;
+
+    async function sendLocation(latitude, longitude) {
+      await fetch(`/driver/order/${orderId}/live-location-json`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ latitude, longitude }),
+      });
+    }
+
+    startButton.addEventListener("click", () => {
+      if (!navigator.geolocation) {
+        statusText.textContent = "This browser does not support location sharing.";
+        return;
+      }
+
+      statusText.textContent = "Requesting location permission...";
+      watchId = navigator.geolocation.watchPosition(
+        async (position) => {
+          const now = Date.now();
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+          latitudeText.textContent = latitude.toFixed(6);
+          longitudeText.textContent = longitude.toFixed(6);
+          statusText.textContent = "Live location sharing is active.";
+          if (now - lastSentAt >= 10000) {
+            lastSentAt = now;
+            try {
+              await sendLocation(latitude, longitude);
+            } catch (error) {
+              statusText.textContent = "Location found, but upload failed. Please check your connection.";
+            }
+          }
+        },
+        () => {
+          statusText.textContent = "Location permission was denied or unavailable.";
+        },
+        { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+      );
+    });
+
+    stopButton.addEventListener("click", async () => {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+      try {
+        await fetch(`/driver/order/${orderId}/stop-live-location`, { method: "POST" });
+        statusText.textContent = "Location sharing is stopped.";
+      } catch (error) {
+        statusText.textContent = "Unable to stop live location right now.";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Orders</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/admin_order.css" />
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="sidebar-top">
+        <h1>🪴 Green Admin</h1>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="/admin">Dashboard</a>
+        <a href="/admin/customers">Customers</a>
+        <a href="/admin/orders" class="active">Orders</a>
+        <a href="/admin/drivers">Drivers</a>
+        <a href="/admin/reports">Reports</a>
+        <a href="/admin/profile">Profile</a>
+      </nav>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1>Order Monitoring</h1>
+          <p>Review customer orders, monitor statuses, and track order activity across the system.</p>
+        </div>
+      </div>
+
+      <section class="admin-stats">
+        <div class="stat-card">
+          <h3>Total Orders</h3>
+          <p>{{ counts.total_orders }}</p>
+        </div>
+        <div class="stat-card">
+          <h3>Pending Orders</h3>
+          <p>{{ counts.active_orders }}</p>
+        </div>
+        <div class="stat-card">
+          <h3>Completed Orders</h3>
+          <p>{{ counts.completed_orders }}</p>
+        </div>
+        <div class="stat-card warning">
+          <h3>Cancelled Orders</h3>
+          <p>{{ counts.cancelled_orders }}</p>
+        </div>
+      </section>
+
+      <section class="orders-panel">
+        <div class="panel-top">
+          <input type="text" id="orderSearch" placeholder="Search order ID or customer name..." />
+          <select id="statusFilter">
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="shipped">Shipped</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <div class="orders-table">
+          <div class="table-row heading">
+            <span>Order ID</span>
+            <span>Customer</span>
+            <span>Items</span>
+            <span>Total</span>
+            <span>Payment</span>
+            <span>Status</span>
+            <span>Actions</span>
+          </div>
+
+          {% for order in orders %}
+          <div class="table-row order-row" data-order="{{ order.order_code }}" data-customer="{{ (order.customer_name or '')|lower }}" data-status="{{ order.status_key }}">
+            <span>#{{ order.order_code }}</span>
+            <span>{{ order.customer_name or 'Customer' }}</span>
+            <span>{{ order.items_text }}</span>
+            <span>&#8369;{{ order.total_display }}</span>
+            <span>{{ order.payment_method or 'N/A' }}</span>
+            <span class="status {{ order.status_key }}">{{ order.order_status }}</span>
+            <span class="actions">
+              <button
+                class="view-btn order-view-btn"
+                type="button"
+                data-order-code="{{ order.order_code }}"
+                data-customer="{{ order.customer_name or 'Customer' }}"
+                data-contact="{{ order.contact_number or 'N/A' }}"
+                data-address="{{ order.delivery_address or 'N/A' }}"
+                data-payment-method="{{ order.payment_method or 'N/A' }}"
+                data-payment-status="{{ order.payment_status or 'N/A' }}"
+                data-order-status="{{ order.order_status or 'N/A' }}"
+                data-subtotal="{{ order.subtotal_display }}"
+                data-delivery-fee="{{ order.delivery_fee_display }}"
+                data-total="{{ order.total_display }}"
+                data-ordered-at="{{ order.ordered_at or 'N/A' }}"
+                data-items="{{ order.items_detail|e }}"
+              >View</button>
+            </span>
+          </div>
+          {% else %}
+          <div class="table-row order-row" data-order="" data-customer="" data-status="pending">
+            <span>No orders yet</span>
+            <span>-</span>
+            <span>-</span>
+            <span>&#8369;0.00</span>
+            <span>-</span>
+            <span class="status pending">Pending</span>
+            <span class="actions">-</span>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <div class="admin-modal hidden" id="orderDetailsModal">
+        <div class="admin-modal-content">
+          <button class="close-modal" type="button" data-close-modal>&times;</button>
+          <h2>Order Details</h2>
+          <div class="detail-grid">
+            <p><strong>Order Code:</strong> #<span id="modalOrderCode"></span></p>
+            <p><strong>Customer:</strong> <span id="modalOrderCustomer"></span></p>
+            <p><strong>Contact Number:</strong> <span id="modalOrderContact"></span></p>
+            <p><strong>Delivery Address:</strong> <span id="modalOrderAddress"></span></p>
+            <p><strong>Payment Method:</strong> <span id="modalOrderPaymentMethod"></span></p>
+            <p><strong>Payment Status:</strong> <span id="modalOrderPaymentStatus"></span></p>
+            <p><strong>Order Status:</strong> <span id="modalOrderStatus"></span></p>
+            <p><strong>Subtotal:</strong> &#8369;<span id="modalOrderSubtotal"></span></p>
+            <p><strong>Delivery Fee:</strong> &#8369;<span id="modalOrderDeliveryFee"></span></p>
+            <p><strong>Total:</strong> &#8369;<span id="modalOrderTotal"></span></p>
+            <p><strong>Ordered Date:</strong> <span id="modalOrderDate"></span></p>
+          </div>
+          <h3>Order Items</h3>
+          <pre id="modalOrderItems"></pre>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/admin_order.js"></script>
+</body>
+</html>

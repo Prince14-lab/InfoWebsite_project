@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Order</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="/static/track_order.css">
+</head>
+<body>
+  <nav class="customer-navbar">
+    <h1 class="logo">Green Nursery</h1>
+    <ul>
+      <li><a href="/customer">Home</a></li>
+      <li><a href="/cart">Cart</a></li>
+      <li><a href="/my-purchases">My Purchases</a></li>
+      <li><a href="/profile">Profile</a></li>
+    </ul>
+  </nav>
+
+  {% set latest = tracking_updates[0] if tracking_updates else none %}
+
+  <section class="tracking-section">
+    <div class="tracking-card">
+      <div class="tracking-header">
+        <div>
+          <h1>Track Order</h1>
+          <p class="order-code">Order #{{ order.order_code or order.id }}</p>
+        </div>
+        <a href="/my-purchases?tab=to_receive" class="back-btn">Back to My Purchases</a>
+      </div>
+
+      <div class="current-location">
+        <span>Current Status</span>
+        {% if latest %}
+          <strong>{{ latest.tracking_status }}</strong>
+          <p>{{ latest.location }}</p>
+          <small>Last updated: {{ latest.created_at }}</small>
+        {% else %}
+          <strong>{{ order.tracking_order_status or order.order_status or 'Preparing' }}</strong>
+          <p>Tracking updates are not available yet.</p>
+          <small>Please check again later.</small>
+        {% endif %}
+      </div>
+
+      <div class="live-tracking-card">
+        <h2>Live Driver Location</h2>
+        <p class="live-status {% if live_location %}active{% endif %}" id="liveStatus">
+          {% if live_location %}
+            Live Driver Location Active
+          {% elif driver_name %}
+            Driver assigned. Live GPS is not active yet.
+          {% else %}
+            Live GPS is not available for this order yet.
+          {% endif %}
+        </p>
+        <p>Driver: <strong id="driverName">{{ driver_name or '-' }}</strong></p>
+        <p>Last GPS Update: <strong id="lastGpsUpdate">{{ live_location.updated_at if live_location else '-' }}</strong></p>
+        <div id="map" class="map {% if not live_location %}hidden-map{% endif %}"></div>
+      </div>
+
+      <h2 class="timeline-title">Tracking Timeline</h2>
+      {% if tracking_updates %}
+      <div class="timeline">
+        {% for update in tracking_updates %}
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <h3>{{ update.tracking_status }}</h3>
+            <p><strong>Location:</strong> {{ update.location }}</p>
+            {% if update.note %}
+            <p>{{ update.note }}</p>
+            {% endif %}
+            <small>{{ update.created_at }}</small>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-tracking">
+        Tracking updates are not available yet. Please check again later.
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <div
+    id="trackOrderData"
+    data-order-id="{{ order.id }}"
+    data-initial-location="{{ initial_location_json|e }}"
+    hidden>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const trackOrderData = document.getElementById("trackOrderData");
+    const orderId = trackOrderData ? trackOrderData.getAttribute("data-order-id") : "";
+    const rawInitialLocation = trackOrderData ? trackOrderData.getAttribute("data-initial-location") : "null";
+    let initialLocation = null;
+
+    try {
+      initialLocation = JSON.parse(rawInitialLocation || "null");
+    } catch (error) {
+      initialLocation = null;
+    }
+
+    let map = null;
+    let marker = null;
+
+    function hasValidCoordinates(location) {
+      if (!location) return false;
+      const latitude = Number(location.latitude);
+      const longitude = Number(location.longitude);
+      return Number.isFinite(latitude)
+        && Number.isFinite(longitude)
+        && latitude >= -90
+        && latitude <= 90
+        && longitude >= -180
+        && longitude <= 180;
+    }
+
+    function setLiveInactive(message) {
+      const liveStatus = document.getElementById("liveStatus");
+      const lastGpsUpdate = document.getElementById("lastGpsUpdate");
+      if (liveStatus) {
+        liveStatus.textContent = message || "Live GPS is not active right now.";
+        liveStatus.classList.remove("active");
+      }
+      if (lastGpsUpdate) lastGpsUpdate.textContent = "-";
+    }
+
+    function setupMap(location) {
+      const mapElement = document.getElementById("map");
+      if (!mapElement || typeof L === "undefined" || !hasValidCoordinates(location)) return;
+
+      mapElement.classList.remove("hidden-map");
+      const latLng = [Number(location.latitude), Number(location.longitude)];
+
+      if (!map) {
+        map = L.map(mapElement).setView(latLng, 15);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+          attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+        marker = L.marker(latLng).addTo(map);
+      } else if (marker) {
+        marker.setLatLng(latLng);
+        map.setView(latLng, map.getZoom());
+      }
+
+      setTimeout(() => map.invalidateSize(), 100);
+    }
+
+    function updateLiveText(location) {
+      const liveStatus = document.getElementById("liveStatus");
+      const driverName = document.getElementById("driverName");
+      const lastGpsUpdate = document.getElementById("lastGpsUpdate");
+
+      if (liveStatus) {
+        liveStatus.textContent = "Live Driver Location Active";
+        liveStatus.classList.add("active");
+      }
+      if (driverName) driverName.textContent = location.driver_name || "Delivery Driver";
+      if (lastGpsUpdate) lastGpsUpdate.textContent = location.updated_at || "-";
+    }
+
+    async function refreshLiveLocation() {
+      if (!orderId) return;
+
+      try {
+        const response = await fetch(`/track-order/${encodeURIComponent(orderId)}/live-location`);
+        const data = await response.json();
+        if (data.success && data.has_location && hasValidCoordinates(data)) {
+          setupMap(data);
+          updateLiveText(data);
+        } else if (data.success && !data.has_location) {
+          setLiveInactive("Live GPS is not active right now. Please refer to the manual tracking updates below.");
+        }
+      } catch (error) {
+        setLiveInactive("Unable to refresh live GPS right now. Please try again later.");
+      }
+    }
+
+    if (initialLocation) {
+      setupMap(initialLocation);
+      updateLiveText(initialLocation);
+    }
+
+    window.addEventListener("load", () => {
+      if (map) map.invalidateSize();
+    });
+
+    setInterval(refreshLiveLocation, 10000);
+  </script>
+</body>
+</html>

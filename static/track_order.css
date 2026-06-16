@@ -1,0 +1,260 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background: #f7fdf7;
+  color: #1f1f1f;
+}
+
+.customer-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 18px 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+  z-index: 1000;
+}
+
+.logo {
+  font-size: 1.8rem;
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.customer-navbar ul {
+  list-style: none;
+  display: flex;
+  gap: 28px;
+}
+
+.customer-navbar a {
+  text-decoration: none;
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.customer-navbar a:hover {
+  color: #4CAF50;
+}
+
+.tracking-section {
+  padding: 130px 24px 60px;
+}
+
+.tracking-card {
+  max-width: 900px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 28px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+}
+
+.tracking-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.tracking-header h1 {
+  color: #2e7d32;
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.order-code {
+  color: #526257;
+  font-weight: 700;
+}
+
+.current-location {
+  background: #edf7ed;
+  border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 24px;
+  border: 1px solid #d8ead8;
+}
+
+.current-location span {
+  display: block;
+  color: #607065;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+}
+
+.current-location strong {
+  display: block;
+  color: #2e7d32;
+  font-size: 1.4rem;
+  margin-bottom: 8px;
+}
+
+.current-location p {
+  color: #38463b;
+  margin-bottom: 8px;
+}
+
+.current-location small {
+  color: #67736a;
+}
+
+.live-tracking-card {
+  background: #ffffff;
+  border: 1px solid #dcebdc;
+  border-radius: 18px;
+  margin-bottom: 24px;
+  padding: 18px;
+}
+
+.live-tracking-card h2 {
+  color: #2e7d32;
+  margin-bottom: 10px;
+}
+
+.live-tracking-card p {
+  color: #4d5d51;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.live-status {
+  background: #fffaf0;
+  border-radius: 12px;
+  color: #5b513d;
+  margin-bottom: 10px;
+  padding: 12px;
+}
+
+.live-status.active {
+  background: #edf7ed;
+  color: #2e7d32;
+  font-weight: 700;
+}
+
+.map {
+  border-radius: 16px;
+  height: 340px;
+  margin-top: 14px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.hidden-map {
+  display: none;
+}
+
+.timeline {
+  display: grid;
+  gap: 16px;
+}
+
+.timeline-title {
+  color: #2e7d32;
+  font-size: 1.25rem;
+  margin-bottom: 14px;
+}
+
+.timeline-item {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 14px;
+  position: relative;
+}
+
+.timeline-dot {
+  width: 14px;
+  height: 14px;
+  background: #4CAF50;
+  border-radius: 50%;
+  margin-top: 8px;
+  box-shadow: 0 0 0 5px #edf7ed;
+}
+
+.timeline-content {
+  background: #fcfffc;
+  border: 1px solid #e1eee1;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.timeline-content h3 {
+  color: #2e7d32;
+  margin-bottom: 8px;
+}
+
+.timeline-content p {
+  color: #4d5d51;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.timeline-content small {
+  color: #738077;
+}
+
+.empty-tracking {
+  background: #fffaf0;
+  border: 1px solid #ead8b2;
+  color: #5b513d;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.back-btn,
+.track-order-btn {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  border: none;
+  border-radius: 999px;
+  padding: 11px 18px;
+  background: #4CAF50;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.back-btn:hover,
+.track-order-btn:hover {
+  background: #3e8e41;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .customer-navbar {
+    padding: 16px 20px;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .customer-navbar ul {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .tracking-section {
+    padding: 155px 16px 40px;
+  }
+
+  .tracking-card {
+    padding: 22px;
+  }
+
+  .map {
+    height: 280px;
+  }
+}
