@@ -141,6 +141,11 @@ with app.app_context():
         print(f"Startup error: {exc}")
 
 
+@app.route("/")
+def home():
+    return redirect(url_for("index"))
+
+
 @app.route("/PlantNursery")
 def index():
     conn = get_db_connection()
